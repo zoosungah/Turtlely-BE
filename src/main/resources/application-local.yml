@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/turtlely_db?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://98.94.89.138:3306/turtlely_db?serverTimezone=Asia/Seoul
     username: root
     password: "0215"
     driver-class-name: com.mysql.cj.jdbc.Driver
