@@ -1,8 +1,13 @@
 version: '3.8'
 services:
-  turtlely-app:
-    image: ${DOCKERHUB_USERNAME}/turtlely-app:latest
-    container_name: turtlely-container
+  turtly-app:
+    image: ${DOCKERHUB_USERNAME}/turtly-app:latest
+    container_name: turtly-container
     ports:
       - "8080:8080"
     restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}

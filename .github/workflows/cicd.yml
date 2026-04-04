@@ -61,7 +61,12 @@ jobs:
             sudo docker-compose down || true
             
             # 4. 새 컨테이너 띄우기 
-            sudo docker-compose up -d
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export DB_URL="${{ secrets.DB_URL }}"
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            
+            sudo -E docker-compose up -d
             
             # 5. 안 쓰는 오래된 이미지 삭제 (용량 정리)
             sudo docker image prune -f
