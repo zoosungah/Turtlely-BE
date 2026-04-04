@@ -37,4 +37,7 @@ out/
 .vscode/
 
 # OS
-.DS_Store
+.DS_Store*
+
+# Security
+*.pem
