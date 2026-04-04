@@ -64,22 +64,23 @@ jobs:
             mkdir -p /home/ubuntu/app
             cd /home/ubuntu/app
             
-            # 1. 도커 허브 로그인
+            # 1. 서버에 환경 변수 파일(.env) 생성
+            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" > .env
+            echo "DB_URL=${{ secrets.DB_URL }}" >> .env
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+
+            # 2. 도커 허브 로그인
             sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
             
-            # 2. 최신 이미지 받아오기
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/turtlely-app:latest
+            # 3. 최신 이미지 받아오기
+            sudo docker-compose pull
             
-            # 3. 기존 컨테이너 끄기 
+            # 4. 기존 컨테이너 끄기 
             sudo docker-compose down || true
             
-            # 4. 새 컨테이너 띄우기 
-            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            export DB_URL="${{ secrets.DB_URL }}"
-            export DB_USERNAME=${{ secrets.DB_USERNAME }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            # 5. 새 컨테이너 띄우기 
+            sudo docker-compose up -d
             
-            sudo -E docker-compose up -d
-            
-            # 5. 안 쓰는 오래된 이미지 삭제 (용량 정리)
+            # 6. 안 쓰는 오래된 이미지 삭제 (용량 정리)
             sudo docker image prune -f
