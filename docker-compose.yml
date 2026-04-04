@@ -1,7 +1,8 @@
 version: '3.8'
 services:
   turtly-app:
-    image: ${DOCKERHUB_USERNAME}/turtly-app:latest
+    # 도커 허브 아이디(sy0215)를 직접 적어서 에러를 방지
+    image: sy0215/turtlely-app:latest
     container_name: turtly-container
     ports:
       - "8080:8080"
