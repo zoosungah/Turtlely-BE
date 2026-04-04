@@ -1,5 +1,5 @@
 # 1. 자바 21 버전을 실행할 수 있는 환경을 가져옴
-FROM openjdk:21-jdk-slim
+FROM amazoncorretto:21-alpine
 
 # 2. 빌드된 결과물(jar 파일)의 위치를 지정
 ARG JAR_FILE=build/libs/*.jar
