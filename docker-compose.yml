@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  turtlely-app:
+    image: ${DOCKERHUB_USERNAME}/turtlely-app:latest
+    container_name: turtlely-container
+    ports:
+      - "8080:8080"
+    restart: always
