@@ -3,6 +3,7 @@ name: Turtlely CI/CD
 on:
   push:
     branches: [ "develop" ]
+  workflow_dispatch:
 
 jobs:
   build-and-push:
