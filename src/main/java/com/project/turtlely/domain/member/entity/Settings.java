@@ -1,4 +1,4 @@
-package com.project.turtlely.domain.signup.entity;
+package com.project.turtlely.domain.member.entity;
 
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
