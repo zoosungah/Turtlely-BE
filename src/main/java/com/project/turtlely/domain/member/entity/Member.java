@@ -1,7 +1,7 @@
-package com.project.turtlely.domain.signup.entity;
+package com.project.turtlely.domain.member.entity;
 
-import com.project.turtlely.domain.signup.enums.Role;
-import com.project.turtlely.domain.signup.enums.SocialType;
+import com.project.turtlely.domain.member.enums.Role;
+import com.project.turtlely.domain.member.enums.SocialType;
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

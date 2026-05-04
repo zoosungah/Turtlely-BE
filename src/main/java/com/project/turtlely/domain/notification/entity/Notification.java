@@ -2,7 +2,7 @@ package com.project.turtlely.domain.notification.entity;
 
 import com.project.turtlely.domain.notification.enums.NotificationStatus;
 import com.project.turtlely.domain.notification.enums.NotificationType;
-import com.project.turtlely.domain.signup.entity.Member;
+import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;

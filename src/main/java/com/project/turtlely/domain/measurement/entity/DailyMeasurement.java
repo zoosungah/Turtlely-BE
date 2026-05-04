@@ -2,7 +2,7 @@ package com.project.turtlely.domain.measurement.entity;
 
 import com.project.turtlely.domain.measurement.enums.Level;
 import com.project.turtlely.domain.measurement.enums.PostureStatus;
-import com.project.turtlely.domain.signup.entity.Member;
+import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.project.turtlely.domain.signup.enums;
+package com.project.turtlely.domain.member.enums;
 
 public enum SocialType {
     LOCAL,
