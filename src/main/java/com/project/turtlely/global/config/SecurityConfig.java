@@ -29,9 +29,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
-                                "/api/sms/**",
-                                "/api/members/**",
-                                "/error"
+                                "/error",
+                                "/auth/**"
                         ).permitAll()
 
                         // 그 외 모든 요청은 인증 필요
