@@ -74,13 +74,13 @@ jobs:
             sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
             
             # 3. 최신 이미지 받아오기
-            sudo docker-compose pull
+            sudo docker compose pull
             
             # 4. 기존 컨테이너 끄기 
-            sudo docker-compose down || true
+            sudo docker compose down || true
             
             # 5. 새 컨테이너 띄우기 
-            sudo docker-compose up -d
+            sudo docker compose up -d
             
             # 6. 안 쓰는 오래된 이미지 삭제 (용량 정리)
             sudo docker image prune -f
