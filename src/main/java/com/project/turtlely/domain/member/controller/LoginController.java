@@ -70,7 +70,8 @@ public class LoginController {
                     description = "서버 내부 오류"
             )
     })
-    @PostMapping("/google")
+
+    @PostMapping("/login/google")
     public ApiResponse<LoginResponse> googleLogin(@RequestBody String idToken) {
 
         // 구글로그인
