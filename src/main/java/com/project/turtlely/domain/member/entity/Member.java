@@ -4,13 +4,13 @@ import com.project.turtlely.domain.member.enums.Role;
 import com.project.turtlely.domain.member.enums.SocialType;
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Member extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,11 +25,11 @@ public class Member extends BaseEntity {
     private String nickname;
 
     @Enumerated(EnumType.STRING)
-    private SocialType socialType; // LOCAL, GOOGLE
+    private SocialType socialType;
 
     private String phoneNumber;
     private String socialId;
 
     @Enumerated(EnumType.STRING)
-    private Role role; // USER, ADMIN
+    private Role role;
 }
