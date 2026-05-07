@@ -15,7 +15,8 @@ public enum MemberErrorCode implements BaseErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404_1", "일치하는 회원 정보가 없습니다."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "MEMBER401_1", "비밀번호가 일치하지 않습니다."),
     LOGIN_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "MEMBER_500", "서버 내부 오류가 발생했습니다."),
-    INVALID_GOOGLE_TOKEN(HttpStatus.BAD_REQUEST, "GOOGLE_400", "유효하지 않은 구글 토큰입니다.");
+    INVALID_GOOGLE_TOKEN(HttpStatus.BAD_REQUEST, "GOOGLE_400", "유효하지 않은 구글 토큰입니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "REISSUE_INVALID_REFRESH_TOKEN", "토큰이 만료되었거나 Redis 내 정보와 불일치할 때");
 
     private final HttpStatus status;
     private final String code;

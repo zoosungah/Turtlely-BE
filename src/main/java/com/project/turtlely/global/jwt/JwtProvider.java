@@ -42,10 +42,33 @@ public class JwtProvider {
         Date validity = new Date(now.getTime() + expireTime);
 
         return Jwts.builder()
-                .setSubject(loginId) // 출입증에 사용자 아이디 적기
-                .setIssuedAt(now) // 발급 시간
-                .setExpiration(validity) // 만료 시간
+                .setSubject(loginId)
+                .setIssuedAt(now)
+                .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS256)
-                .compact(); // 완성!
+                .compact();
+    }
+
+    // 토큰에서 loginId 추출하기
+    public String getLoginIdFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
+    // 토큰 유효성 검증하기
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

@@ -70,13 +70,40 @@ public class LoginController {
                     description = "서버 내부 오류"
             )
     })
-
     @PostMapping("/login/google")
     public ApiResponse<LoginResponse> googleLogin(@RequestBody String idToken) {
 
+        String pureToken = idToken.replace("\"", "");
+
         // 구글로그인
-        LoginResponse realResponse = authService.googleLogin(idToken);
+        LoginResponse realResponse = authService.googleLogin(pureToken);
 
         return ApiResponse.onSuccess(MemberSuccessCode.LOGIN_SUCCESS, realResponse);
+    }
+
+    @Operation(summary = "토큰 재발급 API by 김승연(개발완료)",
+            description = """
+                만료된 Access Token을 Refresh Token을 통해 재발급합니다.
+                - 성공 시 새로운 `accessToken`과 `refreshToken`을 반환합니다.
+                """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "TOKEN_REISSUE_SUCCESS",
+                    description = "토큰이 성공적으로 재발급되었습니다."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "REISSUE_INVALID_REFRESH_TOKEN", // 401 에러
+                    description = "토큰이 만료되었거나 Redis 내 정보와 불일치할 때"
+            )
+    })
+    @PostMapping("/reissue")
+    public ApiResponse<LoginResponse> reissue(@RequestBody String refreshToken) {
+
+        String pureToken = refreshToken.replace("\"", "");
+
+        LoginResponse realResponse = authService.reissue(pureToken);
+
+        return ApiResponse.onSuccess(MemberSuccessCode.TOKEN_REISSUE_SUCCESS, realResponse);
     }
 }

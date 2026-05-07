@@ -92,4 +92,25 @@ public class AuthService {
             throw new MemberException(MemberErrorCode.LOGIN_INTERNAL_SERVER_ERROR);
         }
     }
+
+    // 토큰 재발급 API 로직
+    public LoginResponse reissue(String refreshToken) {
+        // 리프레시 토큰 유효성 검증
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // 토큰에서 사용자 정보(loginId) 추출
+        String loginId = jwtProvider.getLoginIdFromToken(refreshToken);
+
+        // 사용자가 실제로 존재하는지 확인
+        Member member = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        // 새로운 토큰 세트 발급
+        String newAccessToken = jwtProvider.createAccessToken(member.getLoginId());
+        String newRefreshToken = jwtProvider.createRefreshToken(member.getLoginId());
+
+        return new LoginResponse(newAccessToken, newRefreshToken);
+    }
 }
