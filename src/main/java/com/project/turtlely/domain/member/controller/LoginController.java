@@ -30,19 +30,19 @@ public class LoginController {
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "LOGIN_SUCCESS",
+                    responseCode = "MEMBER200_2",
                     description = "로그인에 성공하였습니다."
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "LOGIN_INVALID_PARAMETER", // 400 에러
+                    responseCode = "MEMBER400_1",
                     description = "아이디/비밀번호 형식 오류"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "MEMBER_NOT_FOUND", // 401 에러
+                    responseCode = "MEMBER401_1",
                     description = "일치하는 회원 정보가 없을 때"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "LOGIN_INTERNAL_SERVER_ERROR", // 500 에러
+                    responseCode = "MEMBER500_1",
                     description = "서버 내부 오류"
             )
     })
@@ -62,11 +62,11 @@ public class LoginController {
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "LOGIN_SUCCESS",
+                    responseCode = "MEMBER200_2",
                     description = "구글 로그인에 성공하였습니다."
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "LOGIN_INTERNAL_SERVER_ERROR",
+                    responseCode = "MEMBER500_1",
                     description = "서버 내부 오류"
             )
     })
@@ -89,11 +89,11 @@ public class LoginController {
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "TOKEN_REISSUE_SUCCESS",
+                    responseCode = "MEMBER200_3",
                     description = "토큰이 성공적으로 재발급되었습니다."
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "REISSUE_INVALID_REFRESH_TOKEN", // 401 에러
+                    responseCode = "MEMBER401_2",
                     description = "토큰이 만료되었거나 Redis 내 정보와 불일치할 때"
             )
     })
