@@ -30,7 +30,8 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/error",
-                                "/auth/**"
+                                "/auth/**",
+                                "/api/sms/**"
                         ).permitAll()
 
                         // 그 외 모든 요청은 인증 필요
