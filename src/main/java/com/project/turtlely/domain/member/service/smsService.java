@@ -2,7 +2,10 @@ package com.project.turtlely.domain.member.service;
 
 import com.project.turtlely.domain.member.exception.code.SmsErrorCode;
 import com.project.turtlely.domain.member.repository.MemberRepository;
+import com.project.turtlely.domain.member.repository.SmsCertificationRedisRepository;
 import jdk.jshell.spi.ExecutionControl;
+
+import java.time.Duration;
 import java.util.Random;
 import org.springframework.beans.factory.annotation.Value;
 import net.nurigo.sdk.NurigoApp;
@@ -20,6 +23,7 @@ public class smsService {
     private final String fromNumber;
     private final StringRedisTemplate redisTemplate; // Redis 연결용
     private final MemberRepository memberRepository;
+    private final SmsCertificationRedisRepository redisRepository;
 
     // 인증번호 저장용 키
     private static final String SMS_PREFIX = "sms:";
@@ -30,11 +34,14 @@ public class smsService {
             @Value("${coolsms.api.key}") String apiKey,
             @Value("${coolsms.api.secret}") String apiSecret,
             @Value("${coolsms.from}") String fromNumber,
-            StringRedisTemplate redisTemplate, MemberRepository memberRepository) {
+            StringRedisTemplate redisTemplate,
+            MemberRepository memberRepository,
+            SmsCertificationRedisRepository redisRepository) {
         this.messageService = NurigoApp.INSTANCE.initialize(apiKey, apiSecret, "https://api.coolsms.co.kr");
         this.fromNumber = fromNumber;
         this.redisTemplate = redisTemplate;
         this.memberRepository = memberRepository;
+        this.redisRepository = redisRepository;
     }
 
     /**
@@ -56,12 +63,13 @@ public class smsService {
             this.messageService.sendOne(new SingleMessageSendingRequest(message));
 
             // Redis에 저장 (Key: sms:010..., Value: 인증번호, TTL: 5분)
-            redisTemplate.opsForValue().set(
-                    SMS_PREFIX + phoneNumber,
-                    verificationCode,
-                    5,
-                    TimeUnit.MINUTES
-            );
+//            redisTemplate.opsForValue().set(
+//                    SMS_PREFIX + phoneNumber,
+//                    verificationCode,
+//                    5,
+//                    TimeUnit.MINUTES
+//            );
+            redisRepository.saveCertification(phoneNumber, verificationCode, Duration.ofMinutes(5));
             return "SUCCESS";
 
         } catch (Exception e) {
@@ -73,7 +81,8 @@ public class smsService {
      * 입력받은 번호가 Redis에 저장된 번호와 일치하는지 확인 + 인증상태 15분간 저장
      */
     public String verifyCode(String phoneNumber, String inputCode) {
-        String savedCode = redisTemplate.opsForValue().get(SMS_PREFIX + phoneNumber);
+//        String savedCode = redisTemplate.opsForValue().get(SMS_PREFIX + phoneNumber);
+        String savedCode = redisRepository.getCertification(phoneNumber).orElse(null);
 
         // 1. 인증번호가 만료되었을 때
         if (savedCode == null) {
