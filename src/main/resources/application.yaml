@@ -5,6 +5,12 @@ spring:
   profiles:
     active: local
 
+  datasource:
+    url: ${DB_URL}?serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
