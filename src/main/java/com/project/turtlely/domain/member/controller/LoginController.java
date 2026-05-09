@@ -8,6 +8,7 @@ import com.project.turtlely.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,7 +48,7 @@ public class LoginController {
             )
     })
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
 
         LoginResponse realResponse = authService.login(request);
 
@@ -94,7 +95,7 @@ public class LoginController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "MEMBER401_2",
-                    description = "토큰이 만료되었거나 Redis 내 정보와 불일치할 때"
+                    description = "토큰이 만료되었을 때"
             )
     })
     @PostMapping("/reissue")
