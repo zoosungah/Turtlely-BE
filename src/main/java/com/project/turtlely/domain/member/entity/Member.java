@@ -9,6 +9,7 @@ import lombok.*;
 @Entity
 @Getter
 @Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Member extends BaseEntity {
@@ -31,5 +32,10 @@ public class Member extends BaseEntity {
     private String socialId;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role; // USER, ADMIN
+
+    // 비번 변경 시 사용
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

@@ -31,7 +31,8 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/error",
                                 "/auth/**",
-                                "/api/sms/**"
+                                "/api/sms/**",
+                                "/api/account/**"
                         ).permitAll()
 
                         // 그 외 모든 요청은 인증 필요
