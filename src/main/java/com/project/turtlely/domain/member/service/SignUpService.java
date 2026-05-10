@@ -11,6 +11,7 @@ import com.project.turtlely.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,6 @@ public class SignUpService {
     public boolean isLoginIdDuplicate(String loginId) {
         return memberRepository.existsByLoginId(loginId);
     }
-
 
     @Transactional
     public void signup(MemberRequestDTO.SignupDTO request) {

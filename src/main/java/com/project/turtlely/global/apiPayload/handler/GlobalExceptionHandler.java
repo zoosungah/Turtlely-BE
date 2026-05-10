@@ -1,11 +1,15 @@
 package com.project.turtlely.global.apiPayload.handler;
 
+import com.project.turtlely.domain.member.exception.MemberException;
+import com.project.turtlely.domain.member.exception.code.MemberErrorCode;
 import com.project.turtlely.global.apiPayload.ApiResponse;
 import com.project.turtlely.global.apiPayload.code.BaseErrorCode;
 import com.project.turtlely.global.apiPayload.code.GeneralErrorCode;
 import com.project.turtlely.global.exception.GeneralException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -29,6 +33,30 @@ public class GlobalExceptionHandler {
                         )
                 );
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(
+            MethodArgumentNotValidException ex
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.onFailure(
+                        MemberErrorCode.LOGIN_INVALID_PARAMETER,
+                        null
+                ));
+    }
+
+    @ExceptionHandler(MemberException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMemberException(
+            MemberException ex
+    ) {
+        return ResponseEntity.status(ex.getCode().getStatus())
+                .body(ApiResponse.onFailure(
+                        ex.getCode(),
+                        null
+                ));
+    }
+
+
 
     // 그 외의 정의되지 않은 모든 예외 처리
     @ExceptionHandler(Exception.class)

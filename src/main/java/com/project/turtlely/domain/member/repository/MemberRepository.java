@@ -10,6 +10,9 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member, Long> {
     // 일반 회원가입 시 ID 중복 확인
     boolean existsByLoginId(String loginId);
+  
+    //아이디로 회원정보 통째로 가져오기
+    Optional<Member> findByLoginId(String loginId);
 
     // 구글 회원가입 시 소셜 ID 중복 확인
     boolean existsBySocialId(String socialId);

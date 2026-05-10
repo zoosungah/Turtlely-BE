@@ -5,6 +5,12 @@ spring:
   profiles:
     active: local
 
+  datasource:
+    url: ${DB_URL}?serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,5 +20,23 @@ spring:
         show_sql: true
     open-in-view: false
 
+  # OAuth2 설정 추가
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+
 server:
   port: 8080
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity-in-seconds: 1800 # 액세스 토큰 수명: 30분
+  refresh-token-validity-in-seconds: 1209600 # 리프레시 토큰 수명: 14일
