@@ -1,0 +1,69 @@
+package com.project.turtlely.domain.member.service;
+
+import com.project.turtlely.domain.member.dto.MemberRequestDTO;
+import com.project.turtlely.domain.member.entity.Member;
+import com.project.turtlely.domain.member.enums.Role;
+import com.project.turtlely.domain.member.enums.SocialType;
+import com.project.turtlely.domain.member.exception.MemberException;
+import com.project.turtlely.domain.member.exception.code.MemberErrorCode;
+import com.project.turtlely.domain.member.exception.code.SmsErrorCode;
+import com.project.turtlely.domain.member.repository.MemberRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class SignUpService {
+    private final MemberRepository memberRepository;
+    private final StringRedisTemplate redisTemplate;
+    private final PasswordEncoder passwordEncoder;
+
+    private final String VERIFIED_PREFIX = "sms:verified:";
+
+    /**
+     * ID 중복 확인
+     * @return 존재하면 true(중복), 없으면 false(사용 가능)
+     */
+    public boolean isLoginIdDuplicate(String loginId) {
+        return memberRepository.existsByLoginId(loginId);
+    }
+
+
+    @Transactional
+    public void signup(MemberRequestDTO.SignupDTO request) {
+        // 1. 아이디 중복 확인
+        if (memberRepository.existsByLoginId(request.getLoginId())) {
+            throw new MemberException(MemberErrorCode.MEMBER_ID_ALREADY_EXISTS);
+        }
+
+        // 2. SMS 인증 유효시간 확인
+        validateSmsVerification(request.getPhoneNumber());
+
+        // 3. 비밀번호 암호화 후 저장
+        Member member = Member.builder()
+                .loginId(request.getLoginId())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .nickname(request.getNickname())
+                .phoneNumber(request.getPhoneNumber())
+                .socialType(SocialType.LOCAL)
+                .role(Role.USER)
+                .build();
+
+        memberRepository.save(member);
+
+        // 4. 인증 정보 삭제 및 정리
+        redisTemplate.delete(VERIFIED_PREFIX + request.getPhoneNumber());
+    }
+
+    // 인증 시간 만료됐는지 확인
+    private void validateSmsVerification(String phoneNumber) {
+        String isVerified = redisTemplate.opsForValue().get(VERIFIED_PREFIX + phoneNumber);
+        if (isVerified == null || !isVerified.equals("true")) {
+            throw new MemberException(SmsErrorCode.SMS_BAD_REQUEST);
+        }
+    }
+}

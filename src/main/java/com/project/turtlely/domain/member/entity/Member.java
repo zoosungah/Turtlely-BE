@@ -4,12 +4,12 @@ import com.project.turtlely.domain.member.enums.Role;
 import com.project.turtlely.domain.member.enums.SocialType;
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
     @Id

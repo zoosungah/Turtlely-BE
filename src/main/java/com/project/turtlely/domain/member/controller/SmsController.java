@@ -3,7 +3,7 @@ package com.project.turtlely.domain.member.controller;
 import com.project.turtlely.domain.member.dto.SmsRequestDTO;
 import com.project.turtlely.domain.member.exception.code.SmsErrorCode;
 import com.project.turtlely.domain.member.exception.code.SmsSuccessCode;
-import com.project.turtlely.domain.member.service.smsService;
+import com.project.turtlely.domain.member.service.SmsService;
 import com.project.turtlely.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth/sms")
-public class smsController {
-    private final smsService smsService;
+public class SmsController {
+    private final SmsService smsService;
 
     @Operation(summary = "SMS 인증번호 발송 by 주성아 (개발 완료)",
             description = """

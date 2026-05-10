@@ -12,7 +12,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum MemberSuccessCode implements BaseSuccessCode {
-    MEMBER_ID_AVAILABLE(HttpStatus.OK, "MEMBER200_1", "사용 가능한 아이디입니다.");
+    // 회원가입 관련 성공 코드
+    MEMBER_ID_AVAILABLE(HttpStatus.OK, "MEMBER200_1", "사용 가능한 아이디입니다."),
+    MEMBER_SIGNUP_SUCCESS(HttpStatus.OK, "MEMBER200_4", "회원가입이 완료되었습니다.");
 
     private final HttpStatus status;
     private final String code;
