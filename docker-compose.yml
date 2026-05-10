@@ -9,6 +9,8 @@ services:
       - MYSQL_ROOT_PASSWORD=0215
     ports:
       - "3306:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
 
   turtlely-redis:
     image: redis:latest
