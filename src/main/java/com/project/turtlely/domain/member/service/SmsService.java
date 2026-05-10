@@ -3,7 +3,6 @@ package com.project.turtlely.domain.member.service;
 import com.project.turtlely.domain.member.exception.code.SmsErrorCode;
 import com.project.turtlely.domain.member.repository.MemberRepository;
 import com.project.turtlely.domain.member.repository.SmsCertificationRedisRepository;
-import jdk.jshell.spi.ExecutionControl;
 
 import java.time.Duration;
 import java.util.Random;
@@ -18,7 +17,7 @@ import com.project.turtlely.global.exception.GeneralException;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class smsService {
+public class SmsService {
     private final DefaultMessageService messageService;
     private final String fromNumber;
     private final StringRedisTemplate redisTemplate; // Redis 연결용
@@ -30,7 +29,7 @@ public class smsService {
     // 인증 완료 상태 저장용 키
     private final String VERIFIED_PREFIX = "sms:verified:";
 
-    public smsService(
+    public SmsService(
             @Value("${coolsms.api.key}") String apiKey,
             @Value("${coolsms.api.secret}") String apiSecret,
             @Value("${coolsms.from}") String fromNumber,

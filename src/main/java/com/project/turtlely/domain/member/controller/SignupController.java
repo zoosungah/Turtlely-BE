@@ -2,7 +2,7 @@ package com.project.turtlely.domain.member.controller;
 
 import com.project.turtlely.domain.member.exception.code.MemberErrorCode;
 import com.project.turtlely.domain.member.exception.code.MemberSuccessCode;
-import com.project.turtlely.domain.member.service.signUpService;
+import com.project.turtlely.domain.member.service.SignUpService;
 import com.project.turtlely.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth/signup")
-public class signupController {
+public class SignupController {
 
-    private final signUpService signUpService;
+    private final SignUpService signUpService;
 
     @Operation(summary = "ID 중복 확인 by 주성아 (개발 완료)",
             description = """
