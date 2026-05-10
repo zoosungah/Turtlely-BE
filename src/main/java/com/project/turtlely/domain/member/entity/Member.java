@@ -32,4 +32,9 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private Role role; // USER, ADMIN
+
+    // 비번 변경 시 사용
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

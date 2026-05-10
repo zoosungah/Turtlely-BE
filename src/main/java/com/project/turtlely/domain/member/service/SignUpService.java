@@ -63,7 +63,7 @@ public class SignUpService {
     public void signupSocial(MemberRequestDTO.SocialSignupDTO request) {
         // 1. 이미 해당 소셜 계정으로 가입된 번호가 있는지 확인 (선택)
         if (memberRepository.existsBySocialId(request.getSocialId())) {
-            throw new MemberException(MemberErrorCode.ALREADY_SOCIAL_REGISTERED);
+            throw new MemberException(MemberErrorCode.MEMBER_ALREADY_SOCIAL_REGISTERED);
         }
 
         // 2. SMS 인증 확인

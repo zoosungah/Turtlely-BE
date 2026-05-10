@@ -58,7 +58,7 @@ public class SignupController {
      * 일반 회원가입
      */
 
-    @Operation(summary = "일반 회원가입",
+    @Operation(summary = "일반 회원가입 by 주성아(개발 완료)",
             description = "닉네임, 아이디, 비번, 전화번호를 받아 회원가입을 진행합니다."
     )
     @ApiResponses({
@@ -85,7 +85,7 @@ public class SignupController {
      * 구글 회원가입
      */
     @Operation(
-            summary = "구글 회원가입 API",
+            summary = "구글 회원가입 API by 주성아(개발 완료)",
             description = "구글 소셜 정보(socialId)와 닉네임, 전화번호를 받아 회원가입을 진행합니다."
     )
     @ApiResponses({

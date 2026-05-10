@@ -1,5 +1,6 @@
 package com.project.turtlely.domain.member.service;
 
+import com.project.turtlely.domain.member.exception.MemberException;
 import com.project.turtlely.domain.member.exception.code.SmsErrorCode;
 import com.project.turtlely.domain.member.repository.MemberRepository;
 import com.project.turtlely.domain.member.repository.SmsCertificationRedisRepository;
@@ -98,5 +99,23 @@ public class SmsService {
         redisTemplate.opsForValue().set(VERIFIED_PREFIX + phoneNumber, "true", 15, TimeUnit.MINUTES);
 
         return "SUCCESS";
+    }
+
+    /**
+     * 임시 비밀번호 전송
+     */
+    public void sendTemporaryPasswordSms(String phoneNumber, String tempPassword) {
+        Message message = new Message();
+        message.setFrom(fromNumber);
+        message.setTo(phoneNumber);
+        message.setText("[Turtlely] 임시 비밀번호는 [" + tempPassword + "] 입니다. 로그인 후 반드시 변경해주세요.");
+
+        try {
+            // 이미 주입된 messageService를 사용해서 발송
+            this.messageService.sendOne(new SingleMessageSendingRequest(message));
+        } catch (Exception e) {
+            // 발송 실패 시 에러 처리
+            throw new MemberException(SmsErrorCode.SMS_INTERNAL_SERVER_ERROR);
+        }
     }
 }
