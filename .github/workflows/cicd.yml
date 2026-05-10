@@ -63,12 +63,6 @@ jobs:
           script: |
             mkdir -p /home/ubuntu/app
             cd /home/ubuntu/app
-            
-            # 1. 서버에 환경 변수 파일(.env) 생성
-#            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" > .env
-#            echo "DB_URL=${{ secrets.DB_URL }}" >> .env
-#            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
-#            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
 
             # 2. 도커 허브 로그인
             sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
