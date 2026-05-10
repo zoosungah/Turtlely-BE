@@ -86,6 +86,6 @@ public class AccountController {
             @RequestBody @Valid SmsRequestDTO.SmsSendDTO request) {
 
         accountService.findPwAndSendTemporaryPassword(request.getPhoneNumber());
-        return ApiResponse.onSuccess(MemberSuccessCode.MEMBER__FIND_PW_SUCCESS, null);
+        return ApiResponse.onSuccess(MemberSuccessCode.MEMBER_FIND_PW_SUCCESS, null);
     }
 }
