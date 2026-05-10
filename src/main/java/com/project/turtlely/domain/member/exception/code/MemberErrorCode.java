@@ -11,7 +11,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum MemberErrorCode implements BaseErrorCode {
-    MEMBER_ID_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "MEMBER400_1", "이미 존재하는 아이디입니다.");
+    // 회원가입 관련 에러 코드
+    MEMBER_ID_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "MEMBER400_1", "이미 존재하는 아이디입니다."),
+    ALREADY_SOCIAL_REGISTERED(HttpStatus.BAD_REQUEST, "MEMBER400_4", "이미 가입된 소셜 계정입니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -59,6 +59,29 @@ public class SignUpService {
         redisTemplate.delete(VERIFIED_PREFIX + request.getPhoneNumber());
     }
 
+    @Transactional
+    public void signupSocial(MemberRequestDTO.SocialSignupDTO request) {
+        // 1. 이미 해당 소셜 계정으로 가입된 번호가 있는지 확인 (선택)
+        if (memberRepository.existsBySocialId(request.getSocialId())) {
+            throw new MemberException(MemberErrorCode.ALREADY_SOCIAL_REGISTERED);
+        }
+
+        // 2. SMS 인증 확인
+        validateSmsVerification(request.getPhoneNumber());
+
+        // 3. 저장
+        Member member = Member.builder()
+                .nickname(request.getNickname())
+                .socialId(request.getSocialId())
+                .phoneNumber(request.getPhoneNumber())
+                .socialType(SocialType.GOOGLE)
+                .role(Role.USER)
+                .build();
+        memberRepository.save(member);
+
+        redisTemplate.delete(VERIFIED_PREFIX + request.getPhoneNumber());
+    }
+
     // 인증 시간 만료됐는지 확인
     private void validateSmsVerification(String phoneNumber) {
         String isVerified = redisTemplate.opsForValue().get(VERIFIED_PREFIX + phoneNumber);
