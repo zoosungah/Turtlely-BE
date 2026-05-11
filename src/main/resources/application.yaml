@@ -45,4 +45,4 @@ server:
 jwt:
   secret: ${JWT_SECRET}
   access-token-validity-in-seconds: 1800 # 액세스 토큰 수명: 30분
-  refresh-token-validity-in-seconds: 1209600 # 리프레시 토큰 수명: 14일
+  refresh-token-validity-in-seconds: 86400 # 리프레시 토큰 수명: 1일
