@@ -13,6 +13,7 @@ import com.project.turtlely.domain.member.repository.MemberRepository;
 import com.project.turtlely.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final JwtProvider jwtProvider;
     private final RedisService redisService;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
@@ -36,7 +38,7 @@ public class AuthService {
         Member member = memberRepository.findByLoginId(request.loginId())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-        if (!member.getPassword().equals(request.password())) {
+        if (!passwordEncoder.matches(request.password(), member.getPassword())) {
             throw new MemberException(MemberErrorCode.INVALID_PASSWORD);
         }
 
