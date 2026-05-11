@@ -1,15 +1,45 @@
 version: '3.8'
 services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      - MYSQL_DATABASE=turtlely_db
+      - MYSQL_ROOT_PASSWORD=0215
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+
+  turtlely-redis:
+    image: redis:latest
+    container_name: turtlely-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
   turtlely-app:
     image: sy0215/turtlely-app:latest
     container_name: turtlely-container
+    restart: always
+    depends_on:
+      - mysql-db
+      - turtlely-redis
     ports:
       - "8080:8080"
-    restart: always
     env_file:
       - .env
     environment:
       - SPRING_PROFILES_ACTIVE=local
-      - DB_URL=${DB_URL}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATA_REDIS_HOST=turtlely-redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATASOURCE_URL=${DB_URL}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - COOLSMS_API_KEY=${COOLSMS_API_KEY}
+      - COOLSMS_API_SECRET=${COOLSMS_API_SECRET}
+      - COOLSMS_FROM_NUMBER=${COOLSMS_FROM_NUMBER}
+      - JWT_SECRET=${JWT_SECRET}

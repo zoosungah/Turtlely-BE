@@ -40,7 +40,8 @@ public class LoginController {
         return ApiResponse.onSuccess(MemberSuccessCode.LOGIN_SUCCESS, realResponse);
     }
 
-    @Operation(summary = "구글 로그인 API",
+
+    @Operation(summary = "구글 로그인 API by 김승연(개발 중)",
             description = """
                 구글 OAuth2 인증을 통해 로그인을 진행합니다.
                 - 프론트엔드에서 구글로부터 받은 `idToken`을 넘겨주면 검증 후 토큰을 발급합니다.
