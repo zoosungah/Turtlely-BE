@@ -18,8 +18,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Collections;
-
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class AuthService {
 
     private final MemberRepository memberRepository;
     private final JwtProvider jwtProvider;
+    private final RedisService redisService;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
@@ -39,18 +41,19 @@ public class AuthService {
         Member member = memberRepository.findByLoginId(request.loginId())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-        // 비밀번호 맞는지 확인하기
+        // 비밀번호 맞는지 확인
         if (!member.getPassword().equals(request.password())) {
-            // 비밀번호가 다르면 에러 던짐
             throw new MemberException(MemberErrorCode.INVALID_PASSWORD);
         }
 
         String accessToken = jwtProvider.createAccessToken(member.getLoginId());
         String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-        return new LoginResponse(accessToken, refreshToken);
-    }
+        // Redis에 리프레시 토큰 저장
+        redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(14));
 
+        return new LoginResponse(accessToken, refreshToken, false);
+    }
 
     // 구글 로그인 API 로직
     public LoginResponse googleLogin(String idToken) {
@@ -65,28 +68,39 @@ public class AuthService {
                 throw new MemberException(MemberErrorCode.INVALID_GOOGLE_TOKEN); // 토큰이 가짜일 때 에러
             }
 
-            // 검증된 토큰에서 진짜 이메일 정보 꺼냄
+            // 검증된 토큰에서 이메일 정보 꺼냄
             GoogleIdToken.Payload payload = token.getPayload();
             String email = payload.getEmail();
+            String socialId = payload.getSubject(); // 구글의 고유 식별자(socialId) 추출
+
+            boolean isNewUser = false; // 신규 유저인지 판별
 
             // DB에서 해당 이메일로 가입된 회원이 있는지 확인
-            Member member = memberRepository.findByLoginId(email)
-                    .orElseGet(() -> {
-                        // 회원이 없다면? 자동으로 회원가입을 진행
-                        Member newMember = Member.builder()
-                                .loginId(email)
-                                .nickname((String) payload.get("name")) // 구글 이름 사용
-                                .role(Role.USER)
-                                .socialType(SocialType.GOOGLE)
-                                .build();
-                        return memberRepository.save(newMember);
-                    });
+            Member member = memberRepository.findByLoginId(email).orElse(null);
+
+            if (member == null) {
+                isNewUser = true;
+                String randomPassword = UUID.randomUUID().toString();
+
+                member = Member.builder()
+                        .loginId(email)
+                        .socialId(socialId)
+                        .password(randomPassword)
+                        .role(Role.USER)
+                        .socialType(SocialType.GOOGLE)
+                        .build();
+
+                member = memberRepository.save(member);
+            }
 
             // JWT 토큰 발급
             String accessToken = jwtProvider.createAccessToken(member.getLoginId());
             String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-            return new LoginResponse(accessToken, refreshToken);
+            // Redis에 리프레시 토큰 저장
+            redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(14));
+
+            return new LoginResponse(accessToken, refreshToken, isNewUser);
 
         } catch (Exception e) {
             throw new MemberException(MemberErrorCode.LOGIN_INTERNAL_SERVER_ERROR);
@@ -103,14 +117,21 @@ public class AuthService {
         // 토큰에서 사용자 정보(loginId) 추출
         String loginId = jwtProvider.getLoginIdFromToken(refreshToken);
 
+        // Redis에 저장된 토큰과 일치하는지 확인
+        String savedToken = redisService.getValues(loginId);
+        if (savedToken == null || !savedToken.equals(refreshToken)) {
+            throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
         // 사용자가 실제로 존재하는지 확인
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-        // 새로운 토큰 세트 발급
         String newAccessToken = jwtProvider.createAccessToken(member.getLoginId());
         String newRefreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-        return new LoginResponse(newAccessToken, newRefreshToken);
+        redisService.setValues(member.getLoginId(), newRefreshToken, Duration.ofDays(14));
+
+        return new LoginResponse(newAccessToken, newRefreshToken, false);
     }
 }

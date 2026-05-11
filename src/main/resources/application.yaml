@@ -20,6 +20,12 @@ spring:
         show_sql: true
     open-in-view: false
 
+  # Redis 설정 추가
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
   # OAuth2 설정 추가
   security:
     oauth2:
