@@ -85,8 +85,15 @@ public class SignupController {
      * 구글 회원가입
      */
     @Operation(
-            summary = "구글 회원가입 API by 주성아(개발 중)",
-            description = "구글 소셜 정보(socialId)와 닉네임, 전화번호를 받아 회원가입을 진행합니다."
+            summary = "구글 회원가입 API by 김승연(개발 완료)",
+            description = """
+                구글 소셜 정보(socialId)와 닉네임, 전화번호를 받아 회원가입을 진행합니다.
+                
+                **[주의사항]**
+                 1. 구글 로그인 API에서 `isNewUser: true`일 때 받은 socialId를 그대로 전달해야 함
+                 2. 이 값은 Redis에 임시 저장된 이메일을 찾는 키(Key) 역할을 하며, 보안을 위해 24시간 후 만료됨
+                 3. 만료 시 다시 구글 로그인을 시도하여 새로운 socialId를 발급받아야 함
+                """
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

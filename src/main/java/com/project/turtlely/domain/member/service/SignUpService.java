@@ -11,9 +11,10 @@ import com.project.turtlely.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -69,8 +70,18 @@ public class SignUpService {
         // 2. SMS 인증 확인
         validateSmsVerification(request.getPhoneNumber());
 
-        // 3. 저장
+        // 3. 레디스에서 사용자가 넣어둔 이메일 꺼내오기
+        String email = redisTemplate.opsForValue().get("google:email:" + request.getSocialId());
+        if (email == null) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        String randomPassword = UUID.randomUUID().toString();
+
+        // 4. 저장
         Member member = Member.builder()
+                .loginId(email)
+                .password(passwordEncoder.encode(randomPassword))
                 .nickname(request.getNickname())
                 .socialId(request.getSocialId())
                 .phoneNumber(request.getPhoneNumber())
@@ -80,6 +91,7 @@ public class SignUpService {
         memberRepository.save(member);
 
         redisTemplate.delete(VERIFIED_PREFIX + request.getPhoneNumber());
+        redisTemplate.delete("google:email:" + request.getSocialId());
     }
 
     // 인증 시간 만료됐는지 확인

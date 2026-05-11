@@ -25,7 +25,7 @@ public class LoginController {
 
     private final AuthService authService;
 
-    @Operation(summary = "일반 로그인 API",
+    @Operation(summary = "일반 로그인 API by 김승연(개발 완료)",
             description = "사용자가 아이디와 비밀번호를 입력해 로그인을 진행합니다."
     )
     @ApiResponses({
@@ -41,7 +41,7 @@ public class LoginController {
     }
 
 
-    @Operation(summary = "구글 로그인 API by 김승연(개발 중)",
+    @Operation(summary = "구글 로그인 API by 김승연(개발 완료)",
             description = """
                 구글 OAuth2 인증을 통해 로그인을 진행합니다.
                 - 프론트엔드에서 구글로부터 받은 `idToken`을 넘겨주면 검증 후 토큰을 발급합니다.
@@ -58,7 +58,7 @@ public class LoginController {
         return ApiResponse.onSuccess(MemberSuccessCode.LOGIN_SUCCESS, realResponse);
     }
 
-    @Operation(summary = "토큰 재발급 API",
+    @Operation(summary = "토큰 재발급 API by 김승연(개발 완료)",
             description = "만료된 Access Token을 Refresh Token을 통해 재발급합니다."
     )
     @ApiResponses({
