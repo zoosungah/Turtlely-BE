@@ -50,7 +50,7 @@ public class AuthService {
         String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
         // Redis에 리프레시 토큰 저장
-        redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(14));
+        redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(1));
 
         return new LoginResponse(accessToken, refreshToken, false);
     }
@@ -98,7 +98,7 @@ public class AuthService {
             String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
             // Redis에 리프레시 토큰 저장
-            redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(14));
+            redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(1));
 
             return new LoginResponse(accessToken, refreshToken, isNewUser);
 
@@ -130,7 +130,7 @@ public class AuthService {
         String newAccessToken = jwtProvider.createAccessToken(member.getLoginId());
         String newRefreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-        redisService.setValues(member.getLoginId(), newRefreshToken, Duration.ofDays(14));
+        redisService.setValues(member.getLoginId(), newRefreshToken, Duration.ofDays(1));
 
         return new LoginResponse(newAccessToken, newRefreshToken, false);
     }
