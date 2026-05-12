@@ -25,9 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class SmsController {
     private final SmsService smsService;
 
-    @Operation(summary = "SMS 인증번호 발송 by 주성아 (개발 완료)",
+    @Operation(summary = "회원가입용 SMS 인증번호 발송 by 주성아 (개발 완료)",
             description = """
-                사용자 휴대폰으로 4자리 인증번호를 발송하는 API입니다.
+                회원가입 과정에서 사용되는 SMS 인증 API 입니다.
+                사용자 휴대폰으로 4자리 인증번호를 발송합니다.
                 - `phoneNumber`: 인증번호를 받을 핸드폰 번호
                 - 발송된 번호는 서버 메모리에 5분간 유지됩니다.
                 """
@@ -47,17 +48,45 @@ public class SmsController {
             )
     })
 
-    @PostMapping("/send")
-    public ApiResponse<String> sendSms(@RequestBody SmsRequestDTO.SmsSendDTO request) {
-        String result = smsService.sendVerificationSms(request.getPhoneNumber());
+    /**
+     * 1. 회원가입용 인증번호 발송
+     */
+    @PostMapping("/send/signup")
+    public ApiResponse<String> sendSmsForSignup(@RequestBody SmsRequestDTO.SmsSendDTO request) {
+        smsService.sendSmsForSignup(request.getPhoneNumber());
+        return ApiResponse.onSuccess(SmsSuccessCode.SMS_SEND_SUCCESS, "회원가입 인증번호가 발송되었습니다.");
+    }
 
-        // 입력한 번호가 이미 가입된 번호일 때
-        if ("ALREADY_EXISTS".equals(result)) {
-            return ApiResponse.onFailure(SmsErrorCode.SMS_ALREADY_EXISTS, "이미 가입된 휴대폰 번호입니다.");
-        }
+    @Operation(summary = "아이디/비번 찾기용 SMS 인증번호 발송 by 주성아 (개발 완료)",
+            description = """
+                아이디/비번 찾기 과정에서 사용되는 SMS 인증 API 입니다.
+                사용자 휴대폰으로 4자리 인증번호를 발송합니다.
+                - `phoneNumber`: 인증번호를 받을 핸드폰 번호
+                - 발송된 번호는 서버 메모리에 5분간 유지됩니다.
+                """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "SMS200_1",
+                    description = "인증번호 발송 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "MEMBER404_1",
+                    description = "존재하지 않는 회원"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "SMS500_1",
+                    description = "문자 발송 서버 오류"
+            )
+    })
 
-        // 인증번호를 성공적으로 발송했을 때
-        return ApiResponse.onSuccess(SmsSuccessCode.SMS_SEND_SUCCESS, "인증번호가 발송되었습니다.");
+    /**
+     * 2. 아이디/비밀번호 찾기용 인증번호 발송
+     */
+    @PostMapping("/send/find")
+    public ApiResponse<String> sendSmsForFind(@RequestBody SmsRequestDTO.SmsSendDTO request) {
+        smsService.sendSmsForFind(request.getPhoneNumber());
+        return ApiResponse.onSuccess(SmsSuccessCode.SMS_SEND_SUCCESS, "본인 확인 인증번호가 발송되었습니다.");
     }
 
     @Operation(

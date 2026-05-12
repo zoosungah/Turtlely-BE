@@ -1,6 +1,7 @@
 package com.project.turtlely.domain.member.service;
 
 import com.project.turtlely.domain.member.exception.MemberException;
+import com.project.turtlely.domain.member.exception.code.MemberErrorCode;
 import com.project.turtlely.domain.member.exception.code.SmsErrorCode;
 import com.project.turtlely.domain.member.repository.MemberRepository;
 import com.project.turtlely.domain.member.repository.SmsCertificationRedisRepository;
@@ -45,13 +46,30 @@ public class SmsService {
     }
 
     /**
+     * 1. [회원가입용] 인증번호 발송
+     */
+    public void sendSmsForSignup(String phoneNumber) {
+        if (memberRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new GeneralException(SmsErrorCode.SMS_ALREADY_EXISTS);
+        }
+        sendVerificationSms(phoneNumber);
+    }
+
+    /**
+     * 2. [아이디/비번 찾기용] 인증번호 발송
+     */
+    public void sendSmsForFind(String phoneNumber) {
+        if (!memberRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+        sendVerificationSms(phoneNumber);
+    }
+
+    /**
      * 인증번호를 생성하고 발송하며, Redis에 5분간 저장
      * 이미 가입한 전화번호라면 인증번호 생성 불가
      */
-    public String sendVerificationSms(String phoneNumber) {
-        if (memberRepository.existsByPhoneNumber(phoneNumber)) {
-            return "ALREADY_EXISTS";
-        }
+    private String sendVerificationSms(String phoneNumber) {
         String verificationCode = String.format("%04d", new Random().nextInt(10000));
 
         Message message = new Message();
@@ -62,13 +80,6 @@ public class SmsService {
         try {
             this.messageService.sendOne(new SingleMessageSendingRequest(message));
 
-            // Redis에 저장 (Key: sms:010..., Value: 인증번호, TTL: 5분)
-//            redisTemplate.opsForValue().set(
-//                    SMS_PREFIX + phoneNumber,
-//                    verificationCode,
-//                    5,
-//                    TimeUnit.MINUTES
-//            );
             redisRepository.saveCertification(phoneNumber, verificationCode, Duration.ofMinutes(5));
             return "SUCCESS";
 
@@ -81,7 +92,6 @@ public class SmsService {
      * 입력받은 번호가 Redis에 저장된 번호와 일치하는지 확인 + 인증상태 15분간 저장
      */
     public String verifyCode(String phoneNumber, String inputCode) {
-//        String savedCode = redisTemplate.opsForValue().get(SMS_PREFIX + phoneNumber);
         String savedCode = redisRepository.getCertification(phoneNumber).orElse(null);
 
         // 1. 인증번호가 만료되었을 때
