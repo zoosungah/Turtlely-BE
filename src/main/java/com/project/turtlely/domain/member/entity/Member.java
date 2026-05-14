@@ -16,7 +16,7 @@ public class Member extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberId;
 
-    @Column(length = 50)
+    @Column(name = "login_id", length = 50)
     private String loginId;
 
     private String password;
@@ -25,6 +25,7 @@ public class Member extends BaseEntity {
     private String nickname;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "social_type")
     private SocialType socialType;
 
     private String phoneNumber;
