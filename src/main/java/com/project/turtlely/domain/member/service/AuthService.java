@@ -1,9 +1,5 @@
 package com.project.turtlely.domain.member.service;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
 import com.project.turtlely.domain.member.dto.LoginRequest;
 import com.project.turtlely.domain.member.dto.LoginResponse;
 import com.project.turtlely.domain.member.entity.Member;
@@ -12,13 +8,18 @@ import com.project.turtlely.domain.member.exception.code.MemberErrorCode;
 import com.project.turtlely.domain.member.repository.MemberRepository;
 import com.project.turtlely.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
-import java.util.Collections;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +30,6 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
-
-    @Value("${spring.security.oauth2.client.registration.google.client-id}")
-    private String googleClientId;
 
     // 일반 로그인 API 로직
     public LoginResponse login(LoginRequest request) {
@@ -51,39 +49,43 @@ public class AuthService {
     }
 
     // 구글 로그인 API 로직
-    public LoginResponse googleLogin(String idToken) {
-        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                .setAudience(Collections.singletonList(googleClientId))
-                .build();
+    public LoginResponse googleLogin(String googleAccessToken) {
 
         try {
-            GoogleIdToken token = verifier.verify(idToken);
-            if (token == null) {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(googleAccessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            Map<String, Object> userInfo = response.getBody();
+            if (userInfo == null) {
                 throw new MemberException(MemberErrorCode.INVALID_GOOGLE_TOKEN);
             }
 
-            GoogleIdToken.Payload payload = token.getPayload();
-            String email = payload.getEmail();
-            String socialId = payload.getSubject();
+            String email = (String) userInfo.get("email");
+            String socialId = (String) userInfo.get("sub");
 
             Member member = memberRepository.findByLoginId(email).orElse(null);
 
             if (member == null) {
-                // 구글 이메일을 레디스에 1일 동안 임시보관
                 redisService.setValues("google:email:" + socialId, email, Duration.ofDays(1));
 
-                // 신규 유저이므로 (토큰 없음, 토큰 없음, isNewUser=true, socialId 전달)
                 return new LoginResponse(null, null, true, socialId);
             }
 
-            // 기존 유저일때만 실행
-            String accessToken = jwtProvider.createAccessToken(member.getLoginId());
-            String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
+            String jwtAccessToken = jwtProvider.createAccessToken(member.getLoginId());
+            String jwtRefreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-            redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(1));
+            redisService.setValues(member.getLoginId(), jwtRefreshToken, Duration.ofDays(1));
 
-            return new LoginResponse(accessToken, refreshToken, false, null);
-
+            return new LoginResponse(jwtAccessToken, jwtRefreshToken, false, null);
         } catch (Exception e) {
             throw new MemberException(MemberErrorCode.LOGIN_INTERNAL_SERVER_ERROR);
         }
