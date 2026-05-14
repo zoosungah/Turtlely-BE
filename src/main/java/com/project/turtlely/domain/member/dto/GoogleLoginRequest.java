@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 public record GoogleLoginRequest(
-        @Schema(description = "idToken", example = "dfdfdfkdfkwdkfefiwenj")
-        @NotBlank(message = "idToken은 필수입니다.")
-        String idToken
+        @Schema(description = "구글 accessToken", example = "ya0AQvPyIP2RrkEwR2G...")
+        @NotBlank(message = "accessToken은 필수입니다.")
+        String accessToken
 ) {
 }
