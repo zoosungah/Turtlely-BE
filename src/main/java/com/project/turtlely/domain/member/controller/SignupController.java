@@ -1,5 +1,6 @@
 package com.project.turtlely.domain.member.controller;
 
+import com.project.turtlely.domain.member.dto.LoginResponse;
 import com.project.turtlely.domain.member.dto.MemberRequestDTO;
 import com.project.turtlely.domain.member.exception.code.MemberErrorCode;
 import com.project.turtlely.domain.member.exception.code.MemberSuccessCode;
@@ -106,13 +107,13 @@ public class SignupController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "MEMBER400_6",
-                    description = "이미 해당 소셜 계정으로 가입된 정보가 존재함" // 필요 시 추가
+                    description = "이미 해당 소셜 계정으로 가입된 정보가 존재함"
             )
     })
     @PostMapping("/google")
-    public ApiResponse<Void> googleSignup(@RequestBody @Valid MemberRequestDTO.SocialSignupDTO request) {
-        signUpService.signupSocial(request);
-        return ApiResponse.onSuccess(MemberSuccessCode.MEMBER_SIGNUP_SUCCESS, null);
+    public ApiResponse<LoginResponse> googleSignup(@RequestBody @Valid MemberRequestDTO.SocialSignupDTO request) {
+        LoginResponse response = signUpService.signupSocial(request);
+        return ApiResponse.onSuccess(MemberSuccessCode.MEMBER_SIGNUP_SUCCESS, response);
     }
 
 }
