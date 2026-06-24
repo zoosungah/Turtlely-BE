@@ -32,7 +32,9 @@ public class SecurityConfig {
                                 "/error",
                                 "/auth/**",
                                 "/api/sms/**",
-                                "/api/account/**"
+                                "/api/account/**",
+                                "/api/daily/**",
+                                "/api/monthly/**"
                         ).permitAll()
 
                         // 그 외 모든 요청은 인증 필요
