@@ -45,7 +45,7 @@ public class AuthService {
 
         redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(1));
 
-        return new LoginResponse(accessToken, refreshToken, false, null);
+        return new LoginResponse(accessToken, refreshToken, false, null, member.getMemberId());
     }
 
     // 구글 로그인 API 로직
@@ -77,7 +77,7 @@ public class AuthService {
             if (member == null) {
                 redisService.setValues("google:email:" + socialId, email, Duration.ofDays(1));
 
-                return new LoginResponse(null, null, true, socialId);
+                return new LoginResponse(null, null, true, socialId, null);
             }
 
             String jwtAccessToken = jwtProvider.createAccessToken(member.getLoginId());
@@ -85,7 +85,7 @@ public class AuthService {
 
             redisService.setValues(member.getLoginId(), jwtRefreshToken, Duration.ofDays(1));
 
-            return new LoginResponse(jwtAccessToken, jwtRefreshToken, false, null);
+            return new LoginResponse(jwtAccessToken, jwtRefreshToken, false, null, member.getMemberId());
         } catch (Exception e) {
             throw new MemberException(MemberErrorCode.LOGIN_INTERNAL_SERVER_ERROR);
         }
@@ -112,6 +112,6 @@ public class AuthService {
 
         redisService.setValues(member.getLoginId(), newRefreshToken, Duration.ofDays(1));
 
-        return new LoginResponse(newAccessToken, newRefreshToken, false, null);
+        return new LoginResponse(newAccessToken, newRefreshToken, false, null, member.getMemberId());
     }
 }

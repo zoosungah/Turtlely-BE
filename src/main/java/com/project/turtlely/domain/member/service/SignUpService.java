@@ -106,7 +106,7 @@ public class SignUpService {
         redisTemplate.delete(VERIFIED_PREFIX + request.getPhoneNumber());
         redisTemplate.delete("google:email:" + request.getSocialId());
 
-        return new LoginResponse(accessToken, refreshToken, false, null);
+        return new LoginResponse(accessToken, refreshToken, false, null, member.getMemberId());
     }
 
     // 인증 시간 만료됐는지 확인
