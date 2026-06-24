@@ -1,0 +1,188 @@
+﻿Diagnose log at 2026-06-02T02:07:03Z
+
+AppPath: C:\Program Files\Git\mingw64\bin\git-credential-manager.exe
+InstallDir: C:\Program Files\Git\mingw64\bin\
+Version: 2.6.1+786ab03440ddc82e807a97c0e540f5247e44cec6
+
+------------
+Diagnostic: Environment
+Skipped: False
+Success: True
+Exception: None
+Log:
+OSType: Windows
+OSVersion: 10.0 (build 26200)
+Reading environment variables... OK
+ Variables:
+PROCESSOR_ARCHITEW6432=AMD64
+VBOX_MSI_INSTALL_PATH=C:\Program Files\Oracle\VirtualBox\
+COMPUTERNAME=DESKTOP-HLIVARH
+DriverData=C:\Windows\System32\Drivers\DriverData
+GIT_TRACE2_PARENT_SID=26431f80-982c-4e54-92fd-f8fdf444ddb5
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+OneDrive=C:\Users\eum\OneDrive
+INTELLIJ_TERMINAL_COMMAND_BLOCKS_REWORKED=1
+PyCharm=C:\Program Files\JetBrains\PyCharm 2025.1.3.1\bin;
+SESSIONNAME=Console
+CLASSPATH=.;C:\Users\eum\.jdks\ms-21.0.10\tools.jar
+MYSQL=C:\Program Files\MySQL\MySQL Server 8.0\bin
+PROCESSOR_REVISION=8e0b
+PROCESSOR_ARCHITECTURE=x86
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY;.PYW;.CPL
+HOMEPATH=\Users\eum
+USERDOMAIN_ROAMINGPROFILE=DESKTOP-HLIVARH
+TEMP=C:\Users\eum\AppData\Local\Temp
+LOCALAPPDATA=C:\Users\eum\AppData\Local
+MSYSTEM=MINGW64
+TERM=xterm-256color
+IntelliJ IDEA=C:\Program Files\JetBrains\IntelliJ IDEA 2026.1\bin
+JAVA_HOME=C:\Users\eum\.jdks\ms-21.0.10
+USERDOMAIN=DESKTOP-HLIVARH
+ProgramFiles(x86)=C:\Program Files (x86)
+HOMEDRIVE=C:
+Path=C:/Program Files/Git/mingw64/libexec/git-core;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\eum\bin;D:\DEVTOOLS\Python312\Scripts\;D:\DEVTOOLS\Python312\;D:\DEVTOOLS\Python313\Scripts\;D:\DEVTOOLS\Python313\;C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;"C:\Users\eum\.jdks\ms-21.0.10\bin;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\";C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Redis\;C:\Program Files\MySQL\MySQL Shell 8.0\bin\;C:\Users\eum\AppData\Local\Programs\Python\Launcher\;C:\Users\eum\AppData\Local\Microsoft\WindowsApps;C:\Users\eum\AppData\Roaming\npm;C:\Program Files\JetBrains\PyCharm 2025.1.3.1\bin;;D:\DEVTOOLS\Python313\;C:\Users\eum\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files\JetBrains\IntelliJ IDEA 2026.1\bin
+PROCESSOR_LEVEL=6
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 142 Stepping 11, GenuineIntel
+TMPDIR=C:\Users\Public\Documents\ESTsoft\CreatorTemp
+PROCESS_LAUNCHED_BY_CW=1
+EFC_8800_1592913036=1
+PSModulePath=C:\Users\eum\Documents\WindowsPowerShell\Modules;C:\Program Files\WindowsPowerShell\Modules;C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules
+PUBLIC=C:\Users\Public
+NUMBER_OF_PROCESSORS=8
+CommonProgramFiles=C:\Program Files (x86)\Common Files
+USERPROFILE=C:\Users\eum
+ProgramFiles=C:\Program Files (x86)
+TERMINAL_EMULATOR=JetBrains-JediTerm
+PLINK_PROTOCOL=ssh
+COLORTERM=truecolor
+ProgramW6432=C:\Program Files
+TMP=C:\Users\eum\AppData\Local\Temp
+SystemRoot=C:\WINDOWS
+HOME=C:\Users\eum
+LC_CTYPE=C.UTF-8
+CommonProgramW6432=C:\Program Files\Common Files
+LOGONSERVER=\\DESKTOP-HLIVARH
+FIG_TERM=1
+GIT_EXEC_PATH=C:/Program Files/Git/mingw64/libexec/git-core
+APPDATA=C:\Users\eum\AppData\Roaming
+ProgramData=C:\ProgramData
+TERM_SESSION_ID=8285b9b4-f04d-4624-88ff-473c04c22234
+PROCESS_LAUNCHED_BY_Q=1
+USERNAME=eum
+PSExecutionPolicyPreference=Bypass
+OS=Windows_NT
+ComSpec=C:\WINDOWS\system32\cmd.exe
+SystemDrive=C:
+windir=C:\WINDOWS
+ALLUSERSPROFILE=C:\ProgramData
+
+
+------------
+Diagnostic: File system
+Skipped: False
+Success: True
+Exception: None
+Log:
+Temporary directory is 'C:\Users\eum\AppData\Local\Temp\'...
+Checking basic file I/O...
+Writing to temporary file 'C:\Users\eum\AppData\Local\Temp\a9ed46f6869aa6721af66ac0'... OK
+Reading from temporary file 'C:\Users\eum\AppData\Local\Temp\a9ed46f6869aa6721af66ac0'... OK
+Deleting temporary file 'C:\Users\eum\AppData\Local\Temp\a9ed46f6869aa6721af66ac0'... OK
+Testing IFileSystem instance...
+UserHomePath: C:\Users\eum
+UserDataDirectoryPath: C:\Users\eum\.gcm
+GetCurrentDirectory(): C:\Users\eum\Desktop\turtlely\Turtlely-BE
+
+------------
+Diagnostic: Networking
+Skipped: False
+Success: True
+Exception: None
+Log:
+Checking networking and HTTP stack...
+Creating HTTP client... OK
+IsNetworkAvailable: True
+Sending HEAD request to http://example.com...Sending HEAD request to https://example.com... OK
+ OK
+Acquiring free TCP port... OK
+Testing local HTTP loopback connections...
+Creating new HTTP listener for http://localhost:51278/... OK
+Waiting for loopback connection... OK
+Writing response... OK
+Waiting for response data... OK
+Loopback connection data OK
+
+------------
+Diagnostic: Git
+Skipped: False
+Success: True
+Exception: None
+Log:
+Getting Git version... OK
+Git version is '2.50.1.windows.1'
+Locating current repository...Git repository at 'C:/Users/eum/Desktop/turtlely/Turtlely-BE/.git'
+ OK
+Listing all Git configuration... OK
+Git configuration:
+file:C:/Program Files/Git/etc/gitconfig	diff.astextplain.textconv=astextplain
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.clean=git-lfs clean -- %f
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.smudge=git-lfs smudge -- %f
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.process=git-lfs filter-process
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.required=true
+file:C:/Program Files/Git/etc/gitconfig	http.sslbackend=schannel
+file:C:/Program Files/Git/etc/gitconfig	core.autocrlf=true
+file:C:/Program Files/Git/etc/gitconfig	core.fscache=true
+file:C:/Program Files/Git/etc/gitconfig	core.symlinks=false
+file:C:/Program Files/Git/etc/gitconfig	pull.rebase=false
+file:C:/Program Files/Git/etc/gitconfig	credential.helper=manager
+file:C:/Program Files/Git/etc/gitconfig	credential.https://dev.azure.com.usehttppath=true
+file:C:/Program Files/Git/etc/gitconfig	init.defaultbranch=master
+file:C:/Users/eum/.gitconfig	user.name=kimseungyeon0215
+file:C:/Users/eum/.gitconfig	user.email=sykim021500@gmail.com
+file:.git/config	core.repositoryformatversion=0
+file:.git/config	core.filemode=false
+file:.git/config	core.bare=false
+file:.git/config	core.logallrefupdates=true
+file:.git/config	core.symlinks=false
+file:.git/config	core.ignorecase=true
+file:.git/config	remote.origin.url=https://github.com/zoosungah/Turtlely-BE.git
+file:.git/config	remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+file:.git/config	branch.develop.remote=origin
+file:.git/config	branch.develop.merge=refs/heads/develop
+
+
+------------
+Diagnostic: Credential storage
+Skipped: False
+Success: True
+Exception: None
+Log:
+ICredentialStore instance is of type: CredentialStore
+Writing test credential... OK
+Reading test credential... OK
+Deleting test credential... OK
+
+------------
+Diagnostic: Microsoft authentication (AAD/MSA)
+Skipped: False
+Success: True
+Exception: None
+Log:
+Broker is not enabled.
+Flow type is: Auto
+Gathering MSAL token cache data... OK
+CacheDirectory: C:\Users\eum\AppData\Local\.IdentityService
+CacheFileName: msal.cache
+CacheFilePath: C:\Users\eum\AppData\Local\.IdentityService\msal.cache
+Creating cache helper... OK
+Verifying MSAL token cache persistence... OK
+
+------------
+Diagnostic: GitHub API
+Skipped: False
+Success: True
+Exception: None
+Log:
+Using 'https://github.com/' as API target.
+Querying '/meta' endpoint... OK
+
