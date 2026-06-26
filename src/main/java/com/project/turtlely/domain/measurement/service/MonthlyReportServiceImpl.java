@@ -1,7 +1,10 @@
 package com.project.turtlely.domain.measurement.service;
 
+import com.project.turtlely.domain.exercise.entity.VideoLog;
+import com.project.turtlely.domain.exercise.repository.VideoLogRepository;
 import com.project.turtlely.domain.measurement.dto.AlarmRequest;
 import com.project.turtlely.domain.measurement.dto.AlarmResponse;
+import com.project.turtlely.domain.measurement.dto.GptAnalysisResponse;
 import com.project.turtlely.domain.measurement.dto.MonthlyReportResponse;
 import com.project.turtlely.domain.measurement.dto.ReportAnalyzeRequest;
 import com.project.turtlely.domain.measurement.dto.ReportAnalyzeRequest.FrameData;
@@ -9,6 +12,8 @@ import com.project.turtlely.domain.measurement.entity.MonthlyMeasurement;
 import com.project.turtlely.domain.measurement.repository.MonthlyMeasurementRepository;
 import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.domain.member.repository.MemberRepository;
+import com.project.turtlely.domain.measurement.exception.MeasurementErrorCode;
+import com.project.turtlely.domain.measurement.exception.MeasurementErrorCode.MeasurementCustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +31,15 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
 
     private final MonthlyMeasurementRepository measurementRepository;
     private final MemberRepository memberRepository;
+    private final VideoLogRepository videoLogRepository;
+    private final GptService gptService;
 
     @Override
     public MonthlyReportResponse getMonthlyReport(Long monthlyId, Member member) {
-        // DB를 찔러 가장 싱싱한 회원 정보를 가져옵니다.
+        if (monthlyId == null || monthlyId <= 0) {
+            throw new MeasurementCustomException(MeasurementErrorCode.INVALID_REPORT_ID);
+        }
+
         Member latestMember = memberRepository.findById(member.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
 
@@ -50,6 +60,9 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                     .measurementAlarm(latestMember.isMeasurementAlarm())
                     .reportAlarm(latestMember.isReportAlarm())
                     .measuredAt(null)
+                    .generalOpinion("측정 데이터가 존재하지 않아 소견을 생성할 수 없습니다.")
+                    .top3Diseases(new ArrayList<>())
+                    .predictionGraph(new ArrayList<>())
                     .build();
         }
 
@@ -83,6 +96,17 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 ))
                 .values());
 
+        LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
+        List<VideoLog> recentLogs = videoLogRepository.findRecentWatchLogs(latestMember.getMemberId(), threeMonthsAgo);
+        int totalWatchTimeMinutes = recentLogs.stream().mapToInt(VideoLog::getWatchTime).sum() / 60;
+
+        GptAnalysisResponse gptResult = gptService.requestPostureAnalysis(
+                currentMeasurement.getCvaAngle(),
+                currentMeasurement.getCraAngle(),
+                currentMeasurement.getPostureType(),
+                totalWatchTimeMinutes
+        );
+
         return MonthlyReportResponse.builder()
                 .dataStatus("AVAILABLE")
                 .monthlyId(currentMeasurement.getMonthlyId())
@@ -96,6 +120,14 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .measurementAlarm(latestMember.isMeasurementAlarm())
                 .reportAlarm(latestMember.isReportAlarm())
                 .measuredAt(currentMeasurement.getMeasuredAt())
+                .generalOpinion(gptResult.getGeneralOpinion())
+                .top3Diseases(gptResult.getTop3Diseases())
+                .predictionGraph(gptResult.getPredictionGraph().stream()
+                        .map(p -> MonthlyReportResponse.PredictionGraphDto.builder()
+                                .month(p.getMonth())
+                                .angle(p.getAngle())
+                                .build())
+                        .collect(Collectors.toList()))
                 .build();
     }
 
@@ -103,18 +135,19 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     @Transactional
     public MonthlyReportResponse analyzeAndSaveReport(ReportAnalyzeRequest request, Member member) {
         if (request.getFrames() == null || request.getFrames().isEmpty()) {
-            throw new IllegalArgumentException("분석할 프레임 데이터가 존재하지 않습니다.");
+            throw new MeasurementCustomException(MeasurementErrorCode.INVALID_FRAME_DATA);
         }
+
+        Member latestMember = memberRepository.findById(member.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
 
         FrameData bestFrame = null;
         double minScore = Double.MAX_VALUE;
         FrameData prevFrame = null;
 
-        // 최적 프레임 탐색
         for (int i = 0; i < request.getFrames().size(); i++) {
             FrameData current = request.getFrames().get(i);
 
-            // 예외 필터링
             if (current.getEyeX() <= 0 || current.getEyeX() > 1.0 || current.getEyeY() <= 0 || current.getEyeY() > 1.0 ||
                     current.getTragusX() <= 0 || current.getTragusX() > 1.0 || current.getTragusY() <= 0 || current.getTragusY() > 1.0 ||
                     current.getC7X() <= 0 || current.getC7X() > 1.0 || current.getC7Y() <= 0 || current.getC7Y() > 1.0) {
@@ -136,7 +169,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                             Math.pow(current.getTragusY() - 0.5, 2)
             );
 
-            // 움직임 70% + 화면 중앙 정렬도 30% 패널티 연산
             double calculatedScore = (movement * 0.7) + (centerDistance * 0.3);
 
             if (calculatedScore < minScore) {
@@ -147,15 +179,13 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         }
 
         if (bestFrame == null) {
-            throw new IllegalStateException("랜드마크를 확실하게 찾을 수 없습니다.");
+            throw new MeasurementCustomException(MeasurementErrorCode.LANDMARK_NOT_FOUND);
         }
 
-        // 2. CVA 각도 수치화 공식 연산
         double deltaYCva = Math.abs(bestFrame.getC7Y() - bestFrame.getTragusY());
         double deltaXCva = Math.abs(bestFrame.getC7X() - bestFrame.getTragusX());
         double cvaAngle = Math.toDegrees(Math.atan2(deltaYCva, deltaXCva));
 
-        // 3. CRA 가동 범위 가속 벡터 연산
         double[] v1 = { bestFrame.getEyeX() - bestFrame.getTragusX(), bestFrame.getEyeY() - bestFrame.getTragusY() };
         double[] v2 = { bestFrame.getC7X() - bestFrame.getTragusX(), bestFrame.getC7Y() - bestFrame.getTragusY() };
 
@@ -188,7 +218,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         }
 
         MonthlyMeasurement measurement = MonthlyMeasurement.builder()
-                .member(member)
+                .member(latestMember)
                 .cvaAngle((float) cvaAngle)
                 .craAngle((float) craAngle)
                 .postureType(postureType)
@@ -197,7 +227,8 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .build();
 
         MonthlyMeasurement saved = measurementRepository.save(measurement);
-        return getMonthlyReport(saved.getMonthlyId(), member);
+        measurementRepository.flush();
+        return getMonthlyReport(saved.getMonthlyId(), latestMember);
     }
 
     @Override
@@ -205,27 +236,27 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     public AlarmResponse registerAlarm(AlarmRequest request, Member member) {
         String type = request.getAlarmType();
 
-        // 1. 유효하지 않은 alarm_type 예외 처리
         if (!"MEASURE".equals(type) && !"RESULT".equals(type)) {
-            throw new IllegalArgumentException("INVALID_ALARM_TYPE");
+            throw new MeasurementCustomException(MeasurementErrorCode.INVALID_ALARM_TYPE);
         }
 
-        // 2. 이미 동일한 유형의 알림 신청이 완료된 상태인지 검증
         if ("MEASURE".equals(type) && member.isMeasurementAlarm()) {
-            throw new IllegalStateException("ALREADY_ALARM_SET");
+            throw new MeasurementCustomException(MeasurementErrorCode.ALREADY_ALARM_SET);
         }
         if ("RESULT".equals(type) && member.isReportAlarm()) {
-            throw new IllegalStateException("ALREADY_ALARM_SET");
+            throw new MeasurementCustomException(MeasurementErrorCode.ALREADY_ALARM_SET);
         }
 
-        // 3. 알림 단방향 활성화 설정 반영
-        if ("MEASURE".equals(type)) {
-            member.updateMeasurementAlarm(true);
-        } else {
-            member.updateReportAlarm(true);
+        try {
+            if ("MEASURE".equals(type)) {
+                member.updateMeasurementAlarm(true);
+            } else {
+                member.updateReportAlarm(true);
+            }
+            memberRepository.saveAndFlush(member);
+        } catch (Exception e) {
+            throw new MeasurementCustomException(MeasurementErrorCode.SERVER_ERROR);
         }
-
-        memberRepository.saveAndFlush(member);
 
         return AlarmResponse.builder()
                 .alarmType(type)

@@ -40,12 +40,12 @@ public class AuthService {
             throw new MemberException(MemberErrorCode.INVALID_PASSWORD);
         }
 
-        // 💡 변경: loginId 대신 memberId(PK)를 토큰에 심습니다.
-        String accessToken = jwtProvider.createAccessToken(member.getMemberId());
-        String refreshToken = jwtProvider.createRefreshToken(member.getMemberId());
+        // 💡 [교정완료] 글로벌 JwtProvider 스펙에 맞춰 다시 loginId(String)를 넘겨 토큰 발행
+        String accessToken = jwtProvider.createAccessToken(member.getLoginId());
+        String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-        // Redis 저장 키값도 중복 위험 없는 고유한 식별자인 memberId 기준 문자열로 관리합니다.
-        redisService.setValues(String.valueOf(member.getMemberId()), refreshToken, Duration.ofDays(1));
+        // Redis 저장 규격 싱크화
+        redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(1));
 
         return new LoginResponse(accessToken, refreshToken, false, null);
     }
@@ -82,11 +82,11 @@ public class AuthService {
                 return new LoginResponse(null, null, true, socialId);
             }
 
-            // 💡 변경: 구글 로그인 성공 시에도 memberId(PK) 기반 토큰 발행
-            String jwtAccessToken = jwtProvider.createAccessToken(member.getMemberId());
-            String jwtRefreshToken = jwtProvider.createRefreshToken(member.getMemberId());
+            // 💡 [교정완료] 구글 로그인 성공 시에도 loginId(String) 기반 토큰 발행 싱크 일치
+            String jwtAccessToken = jwtProvider.createAccessToken(member.getLoginId());
+            String jwtRefreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-            redisService.setValues(String.valueOf(member.getMemberId()), jwtRefreshToken, Duration.ofDays(1));
+            redisService.setValues(member.getLoginId(), jwtRefreshToken, Duration.ofDays(1));
 
             return new LoginResponse(jwtAccessToken, jwtRefreshToken, false, null);
         } catch (Exception e) {
@@ -100,23 +100,23 @@ public class AuthService {
             throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        // 💡 변경: 토큰 주체에서 바로 memberId(Long) 추출
-        Long memberId = jwtProvider.getMemberIdFromToken(refreshToken);
+        // 💡 [교정완료] 글로벌 JwtProvider 스펙에 맞춰 존재하지 않는 getMemberIdFromToken 대신 getLoginIdFromToken 사용
+        String loginId = jwtProvider.getLoginIdFromToken(refreshToken);
 
         // Redis 값 비교 검증
-        String savedToken = redisService.getValues(String.valueOf(memberId));
+        String savedToken = redisService.getValues(loginId);
         if (savedToken == null || !savedToken.equals(refreshToken)) {
             throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        // 💡 변경: 불필요한 loginId 탐색 생략하고 PK(memberId) 기반 직관적인 DB 단건 조회 수행
-        Member member = memberRepository.findById(memberId)
+        // 식별자 기반 고유 단건 조회
+        Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-        String newAccessToken = jwtProvider.createAccessToken(member.getMemberId());
-        String newRefreshToken = jwtProvider.createRefreshToken(member.getMemberId());
+        String newAccessToken = jwtProvider.createAccessToken(member.getLoginId());
+        String newRefreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-        redisService.setValues(String.valueOf(member.getMemberId()), newRefreshToken, Duration.ofDays(1));
+        redisService.setValues(member.getLoginId(), newRefreshToken, Duration.ofDays(1));
 
         return new LoginResponse(newAccessToken, newRefreshToken, false, null);
     }

@@ -27,38 +27,36 @@ public class JwtProvider {
         this.refreshTokenValidityTime = refreshTokenValidityTime * 1000;
     }
 
-    // loginId 대신 DB PK인 memberId를 받아서 Access Token 만들기
-    public String createAccessToken(Long memberId) {
-        return createToken(String.valueOf(memberId), accessTokenValidityTime);
+    // Access Token 만들기
+    public String createAccessToken(String loginId) {
+        return createToken(loginId, accessTokenValidityTime);
     }
 
-    // loginId 대신 DB PK인 memberId를 받아서 Refresh Token 만들기
-    public String createRefreshToken(Long memberId) {
-        return createToken(String.valueOf(memberId), refreshTokenValidityTime);
+    // Refresh Token 만들기
+    public String createRefreshToken(String loginId) {
+        return createToken(loginId, refreshTokenValidityTime);
     }
 
-    // subject로 문자열로 변환된 memberId가 들어옴
-    private String createToken(String subject, long expireTime) {
+    private String createToken(String loginId, long expireTime) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + expireTime);
 
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(loginId)
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    //  토큰에서 식별자인 memberId를 Long 타입으로 바로 꺼내기
-    public Long getMemberIdFromToken(String token) {
-        String subject = Jwts.parserBuilder()
+    // 토큰에서 loginId 추출하기
+    public String getLoginIdFromToken(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-        return Long.valueOf(subject); // 문자열 "1"을 숫자 1L로 변환하여 반환
     }
 
     // 토큰 유효성 검증하기

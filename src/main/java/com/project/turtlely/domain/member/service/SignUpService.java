@@ -96,12 +96,12 @@ public class SignUpService {
         memberRepository.save(member);
 
 
-        //회원가입 성공-> 토큰 발행
-        String accessToken = jwtProvider.createAccessToken(member.getMemberId());
-        String refreshToken = jwtProvider.createRefreshToken(member.getMemberId());
+        // 💡 [교정완료] 글로벌 JwtProvider 스펙(String loginId)에 맞춰 데이터타입 싱크 일치화
+        String accessToken = jwtProvider.createAccessToken(member.getLoginId());
+        String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
-        // 리프레시 토큰 Redis 저장
-        redisService.setValues(String.valueOf(member.getMemberId()), refreshToken, Duration.ofDays(1));
+        // 💡 [교정완료] 리프레시 토큰 Redis 저장 키값도 loginId 기반 문자열로 관리 스펙 일치
+        redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(1));
 
         redisTemplate.delete(VERIFIED_PREFIX + request.getPhoneNumber());
         redisTemplate.delete("google:email:" + request.getSocialId());

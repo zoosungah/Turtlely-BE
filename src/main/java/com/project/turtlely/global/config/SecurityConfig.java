@@ -1,7 +1,5 @@
 package com.project.turtlely.global.config;
 
-import com.project.turtlely.global.jwt.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,14 +7,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor // JwtAuthenticationFilter 주입을 위해 추가
 public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -38,21 +32,14 @@ public class SecurityConfig {
                                 "/error",
                                 "/auth/**",
                                 "/api/sms/**",
-                                "/api/account/**"
-                        ).permitAll()
-
-                        // 토큰 인증이 필요한 분석 관련 경로 격상
-                        .requestMatchers(
+                                "/api/account/**",
                                 "/api/daily/**",
                                 "/api/monthly/**"
-                        ).authenticated()
+                        ).permitAll()
 
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
-                )
-
-                // 시큐리티 필터 체인 직전에 JWT 필터 추가
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                );
 
         return http.build();
     }
