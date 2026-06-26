@@ -26,35 +26,69 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     @Override
     public MonthlyReportResponse getMonthlyReport(Long monthlyId, Member member) {
         MonthlyMeasurement currentMeasurement = measurementRepository.findByMonthlyIdAndMember(monthlyId, member).orElse(null);
+
+        // 1. 만약 해당 monthlyId가 존재하지 않는 미측정(NOT_YET) 케이스라면
+        // 빈 배열([])을 반환
+        if (currentMeasurement == null) {
+            return MonthlyReportResponse.builder()
+                    .dataStatus("NOT_YET")
+                    .monthlyId(null)
+                    .nickname(member.getNickname())
+                    .postureType("데이터 없음")
+                    .score(null)
+                    .cvaAngle(null)
+                    .craAngle(null)
+                    .cvaHistory(new ArrayList<>()) // 💡 완벽한 빈 배열 [] 반환
+                    .craHistory(new ArrayList<>()) // 💡 완벽한 빈 배열 [] 반환
+                    .alarmSet(false)
+                    .measuredAt(null)
+                    .build();
+        }
+
+        // 2. 데이터가 존재하는 정상 조회(AVAILABLE) 케이스일 때만 과거 히스토리를 연산
         List<MonthlyMeasurement> rawHistory = measurementRepository.findTop6ByMemberOrderByMeasuredAtDesc(member);
 
         List<MonthlyMeasurement> chronologicalHistory = new ArrayList<>(rawHistory);
         Collections.reverse(chronologicalHistory);
 
-        List<MonthlyReportResponse.HistoryDto> cvaHistory = chronologicalHistory.stream()
+        // 월(Month) 문자열을 key로 삼아, 같은 달에 여러 번 테스트했더라도 가장 최근 데이터 1개만 남기고 중복 제거
+        List<MonthlyReportResponse.HistoryDto> cvaHistory = new ArrayList<>(chronologicalHistory.stream()
                 .map(h -> MonthlyReportResponse.HistoryDto.builder()
                         .month(h.getMeasuredAt().getMonthValue() + "월")
                         .angle((double) h.getCvaAngle())
-                        .build()).collect(Collectors.toList());
+                        .build())
+                .collect(Collectors.toMap(
+                        MonthlyReportResponse.HistoryDto::getMonth,
+                        dto -> dto,
+                        (existing, replacement) -> replacement
+                ))
+                .values());
 
-        List<MonthlyReportResponse.HistoryDto> craHistory = chronologicalHistory.stream()
+        List<MonthlyReportResponse.HistoryDto> craHistory = new ArrayList<>(chronologicalHistory.stream()
                 .map(h -> MonthlyReportResponse.HistoryDto.builder()
                         .month(h.getMeasuredAt().getMonthValue() + "월")
                         .angle((double) h.getCraAngle())
-                        .build()).collect(Collectors.toList());
-
-        if (currentMeasurement == null) {
-            return MonthlyReportResponse.builder()
-                    .dataStatus("NOT_YET").monthlyId(null).nickname(member.getNickname()).postureType("데이터 없음")
-                    .score(null).cvaAngle(null).craAngle(null).cvaHistory(cvaHistory).craHistory(craHistory)
-                    .alarmSet(false).measuredAt(null).build();
-        }
+                        .build())
+                .collect(Collectors.toMap(
+                        MonthlyReportResponse.HistoryDto::getMonth,
+                        dto -> dto,
+                        (existing, replacement) -> replacement
+                ))
+                .values());
 
         return MonthlyReportResponse.builder()
-                .dataStatus("AVAILABLE").monthlyId(currentMeasurement.getMonthlyId()).nickname(member.getNickname())
-                .postureType(currentMeasurement.getPostureType()).score(currentMeasurement.getScore())
-                .cvaAngle((double) currentMeasurement.getCvaAngle()).craAngle((double) currentMeasurement.getCraAngle())
-                .cvaHistory(cvaHistory).craHistory(craHistory).alarmSet(false).measuredAt(currentMeasurement.getMeasuredAt()).build();
+                .dataStatus("AVAILABLE")
+                .monthlyId(currentMeasurement.getMonthlyId())
+                .nickname(member.getNickname())
+                .postureType(currentMeasurement.getPostureType())
+                .score(currentMeasurement.getScore())
+                .cvaAngle((double) currentMeasurement.getCvaAngle())
+                .craAngle((double) currentMeasurement.getCraAngle())
+                .cvaHistory(cvaHistory)
+                .craHistory(craHistory)
+                .alarmSet(false)
+                .measuredAt(currentMeasurement.getMeasuredAt())
+                .build();
     }
 
     @Override

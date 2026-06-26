@@ -100,7 +100,13 @@ public class MonthlyReportController {
 
         MonthlyReportResponse response = monthlyReportService.getMonthlyReport(monthlyId, member);
 
-        return ResponseEntity.ok(ApiResponse.onSuccess(GeneralSuccessCode.OK, response));
+        // 💡 데이터 상태가 NOT_YET인 경우 커스텀 코드 매핑 (REPORT_DETAIL_200 코드에 "존재하지 않습니다" 메시지 출력)
+        if ("NOT_YET".equals(response.getDataStatus())) {
+            return ResponseEntity.ok(ApiResponse.onSuccess(GeneralSuccessCode.REPORT_NOT_FOUND_200, response));
+        }
+
+        // 💡 정상 조회 데이터가 존재하는 경우 커스텀 코드 매핑 (REPORT_DETAIL_200 코드에 "조회가 완료되었습니다" 메시지 출력)
+        return ResponseEntity.ok(ApiResponse.onSuccess(GeneralSuccessCode.REPORT_DETAIL_200, response));
     }
 
     @Operation(summary = "월간 측정용 프레임 좌표 분석 API by 김승연(개발완료)", description = "프론트엔드에서 수집된 3초간의 프레임 좌표들을 연산하여 거북목 판정 상태를 최종 저장합니다.")
@@ -156,6 +162,7 @@ public class MonthlyReportController {
 
         MonthlyReportResponse response = monthlyReportService.analyzeAndSaveReport(request, member);
 
-        return ResponseEntity.ok(ApiResponse.onSuccess(GeneralSuccessCode.OK, response));
+        // 💡 좌표 연산 및 저장 성공 케이스 커스텀 성공 코드 매핑 (REPORT_ANALYZE_200)
+        return ResponseEntity.ok(ApiResponse.onSuccess(GeneralSuccessCode.REPORT_ANALYZE_200, response));
     }
 }
