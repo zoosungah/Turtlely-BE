@@ -97,11 +97,11 @@ public class SignUpService {
 
 
         //회원가입 성공-> 토큰 발행
-        String accessToken = jwtProvider.createAccessToken(member.getLoginId());
-        String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
+        String accessToken = jwtProvider.createAccessToken(member.getMemberId());
+        String refreshToken = jwtProvider.createRefreshToken(member.getMemberId());
 
         // 리프레시 토큰 Redis 저장
-        redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(1));
+        redisService.setValues(String.valueOf(member.getMemberId()), refreshToken, Duration.ofDays(1));
 
         redisTemplate.delete(VERIFIED_PREFIX + request.getPhoneNumber());
         redisTemplate.delete("google:email:" + request.getSocialId());
