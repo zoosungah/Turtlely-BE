@@ -1,11 +1,14 @@
 package com.project.turtlely.domain.measurement.service;
 
+import com.project.turtlely.domain.measurement.dto.AlarmRequest;
+import com.project.turtlely.domain.measurement.dto.AlarmResponse;
 import com.project.turtlely.domain.measurement.dto.MonthlyReportResponse;
 import com.project.turtlely.domain.measurement.dto.ReportAnalyzeRequest;
 import com.project.turtlely.domain.measurement.dto.ReportAnalyzeRequest.FrameData;
 import com.project.turtlely.domain.measurement.entity.MonthlyMeasurement;
 import com.project.turtlely.domain.measurement.repository.MonthlyMeasurementRepository;
 import com.project.turtlely.domain.member.entity.Member;
+import com.project.turtlely.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,36 +25,40 @@ import java.util.stream.Collectors;
 public class MonthlyReportServiceImpl implements MonthlyReportService {
 
     private final MonthlyMeasurementRepository measurementRepository;
+    private final MemberRepository memberRepository;
 
     @Override
     public MonthlyReportResponse getMonthlyReport(Long monthlyId, Member member) {
-        MonthlyMeasurement currentMeasurement = measurementRepository.findByMonthlyIdAndMember(monthlyId, member).orElse(null);
+        // DB를 찔러 가장 싱싱한 회원 정보를 가져옵니다.
+        Member latestMember = memberRepository.findById(member.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
 
-        // 1. 만약 해당 monthlyId가 존재하지 않는 미측정(NOT_YET) 케이스라면
-        // 빈 배열([])을 반환
+        MonthlyMeasurement currentMeasurement = measurementRepository.findByMonthlyIdAndMember(monthlyId, latestMember).orElse(null);
+
+        // 1. 미측정(NOT_YET) 케이스라면
         if (currentMeasurement == null) {
             return MonthlyReportResponse.builder()
                     .dataStatus("NOT_YET")
                     .monthlyId(null)
-                    .nickname(member.getNickname())
+                    .nickname(latestMember.getNickname())
                     .postureType("데이터 없음")
                     .score(null)
                     .cvaAngle(null)
                     .craAngle(null)
-                    .cvaHistory(new ArrayList<>()) // 💡 완벽한 빈 배열 [] 반환
-                    .craHistory(new ArrayList<>()) // 💡 완벽한 빈 배열 [] 반환
-                    .alarmSet(false)
+                    .cvaHistory(new ArrayList<>())
+                    .craHistory(new ArrayList<>())
+                    .measurementAlarm(latestMember.isMeasurementAlarm())
+                    .reportAlarm(latestMember.isReportAlarm())
                     .measuredAt(null)
                     .build();
         }
 
-        // 2. 데이터가 존재하는 정상 조회(AVAILABLE) 케이스일 때만 과거 히스토리를 연산
-        List<MonthlyMeasurement> rawHistory = measurementRepository.findTop6ByMemberOrderByMeasuredAtDesc(member);
+        // 2. 데이터가 존재하는 정상 조회(AVAILABLE) 케이스일 때
+        List<MonthlyMeasurement> rawHistory = measurementRepository.findTop6ByMemberOrderByMeasuredAtDesc(latestMember);
 
         List<MonthlyMeasurement> chronologicalHistory = new ArrayList<>(rawHistory);
         Collections.reverse(chronologicalHistory);
 
-        // 월(Month) 문자열을 key로 삼아, 같은 달에 여러 번 테스트했더라도 가장 최근 데이터 1개만 남기고 중복 제거
         List<MonthlyReportResponse.HistoryDto> cvaHistory = new ArrayList<>(chronologicalHistory.stream()
                 .map(h -> MonthlyReportResponse.HistoryDto.builder()
                         .month(h.getMeasuredAt().getMonthValue() + "월")
@@ -79,14 +86,15 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         return MonthlyReportResponse.builder()
                 .dataStatus("AVAILABLE")
                 .monthlyId(currentMeasurement.getMonthlyId())
-                .nickname(member.getNickname())
+                .nickname(latestMember.getNickname())
                 .postureType(currentMeasurement.getPostureType())
                 .score(currentMeasurement.getScore())
                 .cvaAngle((double) currentMeasurement.getCvaAngle())
                 .craAngle((double) currentMeasurement.getCraAngle())
                 .cvaHistory(cvaHistory)
                 .craHistory(craHistory)
-                .alarmSet(false)
+                .measurementAlarm(latestMember.isMeasurementAlarm())
+                .reportAlarm(latestMember.isReportAlarm())
                 .measuredAt(currentMeasurement.getMeasuredAt())
                 .build();
     }
@@ -190,5 +198,38 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
 
         MonthlyMeasurement saved = measurementRepository.save(measurement);
         return getMonthlyReport(saved.getMonthlyId(), member);
+    }
+
+    @Override
+    @Transactional
+    public AlarmResponse registerAlarm(AlarmRequest request, Member member) {
+        String type = request.getAlarmType();
+
+        // 1. 유효하지 않은 alarm_type 예외 처리
+        if (!"MEASURE".equals(type) && !"RESULT".equals(type)) {
+            throw new IllegalArgumentException("INVALID_ALARM_TYPE");
+        }
+
+        // 2. 이미 동일한 유형의 알림 신청이 완료된 상태인지 검증
+        if ("MEASURE".equals(type) && member.isMeasurementAlarm()) {
+            throw new IllegalStateException("ALREADY_ALARM_SET");
+        }
+        if ("RESULT".equals(type) && member.isReportAlarm()) {
+            throw new IllegalStateException("ALREADY_ALARM_SET");
+        }
+
+        // 3. 알림 단방향 활성화 설정 반영
+        if ("MEASURE".equals(type)) {
+            member.updateMeasurementAlarm(true);
+        } else {
+            member.updateReportAlarm(true);
+        }
+
+        memberRepository.saveAndFlush(member);
+
+        return AlarmResponse.builder()
+                .alarmType(type)
+                .alarmSet(true)
+                .build();
     }
 }

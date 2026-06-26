@@ -41,8 +41,11 @@ public class MonthlyReportResponse {
     @JsonProperty("cra_history")
     private List<HistoryDto> craHistory;
 
-    @JsonProperty("is_alarm_set")
-    private boolean alarmSet;
+    @JsonProperty("measurement_alarm")
+    private boolean measurementAlarm;
+
+    @JsonProperty("report_alarm")
+    private boolean reportAlarm;
 
     @JsonProperty("measured_at")
     private LocalDateTime measuredAt;
