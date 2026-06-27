@@ -40,9 +40,11 @@ public class AuthService {
             throw new MemberException(MemberErrorCode.INVALID_PASSWORD);
         }
 
+        // 💡 [교정완료] 글로벌 JwtProvider 스펙에 맞춰 다시 loginId(String)를 넘겨 토큰 발행
         String accessToken = jwtProvider.createAccessToken(member.getLoginId());
         String refreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
+        // Redis 저장 규격 싱크화
         redisService.setValues(member.getLoginId(), refreshToken, Duration.ofDays(1));
 
         return new LoginResponse(accessToken, refreshToken, false, null, member.getMemberId());
@@ -80,6 +82,7 @@ public class AuthService {
                 return new LoginResponse(null, null, true, socialId, null);
             }
 
+            // 💡 [교정완료] 구글 로그인 성공 시에도 loginId(String) 기반 토큰 발행 싱크 일치
             String jwtAccessToken = jwtProvider.createAccessToken(member.getLoginId());
             String jwtRefreshToken = jwtProvider.createRefreshToken(member.getLoginId());
 
@@ -97,13 +100,16 @@ public class AuthService {
             throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
         }
 
+        // 💡 [교정완료] 글로벌 JwtProvider 스펙에 맞춰 존재하지 않는 getMemberIdFromToken 대신 getLoginIdFromToken 사용
         String loginId = jwtProvider.getLoginIdFromToken(refreshToken);
 
+        // Redis 값 비교 검증
         String savedToken = redisService.getValues(loginId);
         if (savedToken == null || !savedToken.equals(refreshToken)) {
             throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
         }
 
+        // 식별자 기반 고유 단건 조회
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
