@@ -45,7 +45,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
 
         MonthlyMeasurement currentMeasurement = measurementRepository.findByMonthlyIdAndMember(monthlyId, latestMember).orElse(null);
 
-        // 1. 미측정(NOT_YET) 케이스라면
+        // 1. 미측정(NOT_YET)일때
         if (currentMeasurement == null) {
             return MonthlyReportResponse.builder()
                     .dataStatus("NOT_YET")
@@ -60,9 +60,11 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                     .measurementAlarm(latestMember.isMeasurementAlarm())
                     .reportAlarm(latestMember.isReportAlarm())
                     .measuredAt(null)
-                    .generalOpinion("측정 데이터가 존재하지 않아 소견을 생성할 수 없습니다.")
-                    .top3Diseases(new ArrayList<>())
-                    .predictionGraph(new ArrayList<>())
+                    .predictedDiseases(new ArrayList<>())
+                    .predictionData(MonthlyReportResponse.PredictionDataDto.builder()
+                            .predictionMonths(new ArrayList<>())
+                            .predictionScores(new ArrayList<>())
+                            .build())
                     .build();
         }
 
@@ -96,17 +98,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 ))
                 .values());
 
-        LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
-        List<VideoLog> recentLogs = videoLogRepository.findRecentWatchLogs(latestMember.getMemberId(), threeMonthsAgo);
-        int totalWatchTimeMinutes = recentLogs.stream().mapToInt(VideoLog::getWatchTime).sum() / 60;
-
-        GptAnalysisResponse gptResult = gptService.requestPostureAnalysis(
-                currentMeasurement.getCvaAngle(),
-                currentMeasurement.getCraAngle(),
-                currentMeasurement.getPostureType(),
-                totalWatchTimeMinutes
-        );
-
         return MonthlyReportResponse.builder()
                 .dataStatus("AVAILABLE")
                 .monthlyId(currentMeasurement.getMonthlyId())
@@ -120,14 +111,11 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .measurementAlarm(latestMember.isMeasurementAlarm())
                 .reportAlarm(latestMember.isReportAlarm())
                 .measuredAt(currentMeasurement.getMeasuredAt())
-                .generalOpinion(gptResult.getGeneralOpinion())
-                .top3Diseases(gptResult.getTop3Diseases())
-                .predictionGraph(gptResult.getPredictionGraph().stream()
-                        .map(p -> MonthlyReportResponse.PredictionGraphDto.builder()
-                                .month(p.getMonth())
-                                .angle(p.getAngle())
-                                .build())
-                        .collect(Collectors.toList()))
+                .predictedDiseases(currentMeasurement.getPredictedDiseasesList())
+                .predictionData(MonthlyReportResponse.PredictionDataDto.builder()
+                        .predictionMonths(currentMeasurement.getPredictionMonthsList())
+                        .predictionScores(currentMeasurement.getPredictionScoresList())
+                        .build())
                 .build();
     }
 
@@ -217,17 +205,43 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             finalScore = 40;
         }
 
+        LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
+        List<VideoLog> recentLogs = videoLogRepository.findRecentWatchLogs(latestMember.getMemberId(), threeMonthsAgo);
+        int totalWatchTimeMinutes = recentLogs.stream().mapToInt(VideoLog::getWatchTime).sum() / 60;
+
+        GptAnalysisResponse gptResult = gptService.requestPostureAnalysis(
+                cvaAngle,
+                craAngle,
+                postureType,
+                totalWatchTimeMinutes
+        );
+
+        String diseasesText = String.join(",", gptResult.getTop3Diseases());
+
+        String predMonths = gptResult.getPredictionGraph().stream()
+                .map(p -> p.getMonth())
+                .collect(Collectors.joining(","));
+
+        String predScores = gptResult.getPredictionGraph().stream()
+                .map(p -> String.valueOf((int) Math.round(p.getAngle())))
+                .collect(Collectors.joining(","));
+
+        String finalPredictionData = predMonths + "|" + predScores;
+
         MonthlyMeasurement measurement = MonthlyMeasurement.builder()
                 .member(latestMember)
                 .cvaAngle((float) cvaAngle)
                 .craAngle((float) craAngle)
                 .postureType(postureType)
                 .score(finalScore)
+                .predictedDiseases(diseasesText)
+                .predictionData(finalPredictionData)
                 .measuredAt(LocalDateTime.now())
                 .build();
 
         MonthlyMeasurement saved = measurementRepository.save(measurement);
         measurementRepository.flush();
+
         return getMonthlyReport(saved.getMonthlyId(), latestMember);
     }
 
@@ -240,20 +254,23 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             throw new MeasurementCustomException(MeasurementErrorCode.INVALID_ALARM_TYPE);
         }
 
-        if ("MEASURE".equals(type) && member.isMeasurementAlarm()) {
+        Member latestMember = memberRepository.findById(member.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
+
+        if ("MEASURE".equals(type) && latestMember.isMeasurementAlarm()) {
             throw new MeasurementCustomException(MeasurementErrorCode.ALREADY_ALARM_SET);
         }
-        if ("RESULT".equals(type) && member.isReportAlarm()) {
+        if ("RESULT".equals(type) && latestMember.isReportAlarm()) {
             throw new MeasurementCustomException(MeasurementErrorCode.ALREADY_ALARM_SET);
         }
 
         try {
             if ("MEASURE".equals(type)) {
-                member.updateMeasurementAlarm(true);
+                latestMember.updateMeasurementAlarm(true);
             } else {
-                member.updateReportAlarm(true);
+                latestMember.updateReportAlarm(true);
             }
-            memberRepository.saveAndFlush(member);
+            memberRepository.saveAndFlush(latestMember);
         } catch (Exception e) {
             throw new MeasurementCustomException(MeasurementErrorCode.SERVER_ERROR);
         }

@@ -62,17 +62,13 @@ public class MonthlyReportResponse {
     @JsonProperty("measured_at")
     private LocalDateTime measuredAt;
 
-    @Schema(description = "GPT 기반 AI 종합 분석 소견 텍스트", example = "현재 CVA 각도가 정상 범위보다 낮아 목이 앞으로 다소 돌출된 상태입니다. 모니터 높이를 올리고 스트레칭을 늘려주세요.")
-    @JsonProperty("general_opinion")
-    private String generalOpinion;
-
-    @Schema(description = "위험도 기준 유관 유발 예측 질환 Top 3", example = "[\"목디스크\", \"근막통증증후군\", \"경추관협착증\"]")
-    @JsonProperty("top3_diseases")
-    private List<String> top3Diseases;
+    @Schema(description = "위험도 기준 유관 유발 예측 질환 Top 3", example = "[\"목디스크\", \"후두신경통\", \"척추측만증\"]")
+    @JsonProperty("predicted_diseases")
+    private List<String> predictedDiseases;
 
     @Schema(description = "미래 거북목 악화 시뮬레이션 예측 그래프 데이터")
-    @JsonProperty("prediction_graph")
-    private List<PredictionGraphDto> predictionGraph;
+    @JsonProperty("prediction_data")
+    private PredictionDataDto predictionData;
 
     @Getter
     @Builder
@@ -89,12 +85,14 @@ public class MonthlyReportResponse {
     @Getter
     @Builder
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    @Schema(description = "미래 예측 차트 DTO")
-    public static class PredictionGraphDto {
-        @Schema(description = "예측 대상 월", example = "7월")
-        private String month;
+    @Schema(description = "미래 예측 차트 데이터 묶음 DTO")
+    public static class PredictionDataDto {
+        @Schema(description = "예측 대상 월 리스트", example = "[\"6월\", \"7월\", \"8월\", \"9월\", \"10월\", \"11월\"]")
+        @JsonProperty("prediction_months")
+        private List<String> predictionMonths;
 
-        @Schema(description = "예측 악화 각도 수치", example = "45.1")
-        private Double angle;
+        @Schema(description = "예측 악화 점수 리스트", example = "[73, 75, 78, 80, 82, 85]")
+        @JsonProperty("prediction_scores")
+        private List<Integer> predictionScores;
     }
 }
