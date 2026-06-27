@@ -36,7 +36,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             throw new MeasurementCustomException(MeasurementErrorCode.INVALID_REPORT_ID);
         }
 
-        // 💡 [변경 완료] 기존 id 조회 방식에서 시큐리티 loginId 조회 방식으로 고도화
         Member latestMember = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
 
@@ -130,6 +129,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         double minScore = Double.MAX_VALUE;
         FrameData prevFrame = null;
 
+        // 최적의 프레임 선정
         for (int i = 0; i < request.getFrames().size(); i++) {
             FrameData current = request.getFrames().get(i);
 
@@ -167,6 +167,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             throw new MeasurementCustomException(MeasurementErrorCode.LANDMARK_NOT_FOUND);
         }
 
+        // CVA,CRA 각도 도출
         double deltaYCva = Math.abs(bestFrame.getC7Y() - bestFrame.getTragusY());
         double deltaXCva = Math.abs(bestFrame.getC7X() - bestFrame.getTragusX());
         double cvaAngle = Math.toDegrees(Math.atan2(deltaYCva, deltaXCva));
@@ -202,6 +203,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             finalScore = 40;
         }
 
+        // 최근 3개월간 시청한 비디오 총 시청 시간 합산
         LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
         List<VideoLog> recentLogs = videoLogRepository.findRecentWatchLogs(latestMember.getMemberId(), threeMonthsAgo);
         int totalWatchTimeMinutes = recentLogs.stream().mapToInt(VideoLog::getWatchTime).sum() / 60;

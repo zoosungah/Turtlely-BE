@@ -27,10 +27,12 @@ public class GptService {
         ObjectMapper objectMapper = new ObjectMapper();
         String url = "https://api.openai.com/v1/chat/completions";
 
+        // 헤더 설정
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
+        // 측정 데이터 및 운동 시간을 반영한 프롬프트 생성
         String systemPrompt = "You are an expert orthopedic and rehabilitation AI medical advisor specialized in forward head posture (turtle neck syndrome). " +
                 "You must provide a response strictly in JSON format matching the requested schema. Do not include any markdown or backticks like ```json.";
 
@@ -49,6 +51,7 @@ public class GptService {
                 currentCva, currentCra, postureType, totalWatchTimeMinutes
         );
 
+        // OpenAI API 규격에 맞게 메시지 바디 구성
         Map<String, Object> requestBody = Map.of(
                 "model", "gpt-5.4-mini",
                 "response_format", Map.of("type", "json_object"),
@@ -62,15 +65,16 @@ public class GptService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
+            // OpenAI API 호출 및 응답 수신
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
             String rawResponse = response.getBody();
-
+            // OpenAI 응답 파싱
             Map<String, Object> responseMap = objectMapper.readValue(rawResponse, Map.class);
             List<Map<String, Object>> choices = (List<Map<String, Object>>) responseMap.get("choices");
             Map<String, Object> firstChoice = choices.get(0);
             Map<String, Object> messageMap = (Map<String, Object>) firstChoice.get("message");
             String jsonContent = (String) messageMap.get("content");
-
+            // 파싱된 내부 JSON 본문을 프론트 반환 스펙 DTO 클래스로 역직렬화
             return objectMapper.readValue(jsonContent, GptAnalysisResponse.class);
         } catch (Exception e) {
             throw new MeasurementErrorCode.MeasurementCustomException(MeasurementErrorCode.LLM_SERVER_ERROR);
