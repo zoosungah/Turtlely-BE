@@ -1,16 +1,23 @@
 package com.project.turtlely.global.config;
 
+import com.project.turtlely.global.jwt.JwtAuthenticationFilter;
+import com.project.turtlely.global.jwt.JwtProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+    private final JwtProvider jwtProvider;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -32,16 +39,24 @@ public class SecurityConfig {
                                 "/error",
                                 "/auth/**",
                                 "/api/sms/**",
-                                "/api/account/**",
-                                "/api/daily/**",
-                                "/api/monthly/**"
+                                "/api/account/**"
+//                                "/api/daily/**",
+//                                "/api/monthly/**"
                         ).permitAll()
 
+                        // HW fastapi에서 쏘는 post 요청만 로그인 없이 허용
+                        .requestMatchers(HttpMethod.POST, "/api/daily/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/monthly/**").permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 );
 
+        // JWT 인증 필터 적용
+        http.addFilterBefore(new JwtAuthenticationFilter(jwtProvider),
+                UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
+
     }
 
 
