@@ -49,7 +49,7 @@ public class MonthlyReportController {
                                                     "    \"data_status\": \"AVAILABLE\",\n" +
                                                     "    \"monthly_id\": 16,\n" +
                                                     "    \"nickname\": \"seungyeon\",\n" +
-                                                    "    \"posture_type\": \"역C자목\",\n" +
+                                                    "    \"posture_type\": \"정상\",\n" +
                                                     "    \"score\": 73,\n" +
                                                     "    \"cva_angle\": 48.5,\n" +
                                                     "    \"cra_angle\": 12.3,\n" +
@@ -128,7 +128,7 @@ public class MonthlyReportController {
                                             "    \"data_status\": \"AVAILABLE\",\n" +
                                             "    \"monthly_id\": 16,\n" +
                                             "    \"nickname\": \"seungyeon\",\n" +
-                                            "    \"posture_type\": \"역C자목\",\n" +
+                                            "    \"posture_type\": \"정상\",\n" +
                                             "    \"score\": 73,\n" +
                                             "    \"cva_angle\": 48.5,\n" +
                                             "    \"cra_angle\": 12.3,\n" +

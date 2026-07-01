@@ -41,7 +41,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
 
         MonthlyMeasurement currentMeasurement = measurementRepository.findByMonthlyIdAndMember(monthlyId, latestMember).orElse(null);
 
-        // 1. 미측정(NOT_YET)일때
         if (currentMeasurement == null) {
             return MonthlyReportResponse.builder()
                     .dataStatus("NOT_YET")
@@ -64,7 +63,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                     .build();
         }
 
-        // 2. 데이터가 존재하는 정상 조회(AVAILABLE) 케이스일 때
         List<MonthlyMeasurement> rawHistory = measurementRepository.findTop6ByMemberOrderByMeasuredAtDesc(latestMember);
 
         List<MonthlyMeasurement> chronologicalHistory = new ArrayList<>(rawHistory);
@@ -129,7 +127,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         double minScore = Double.MAX_VALUE;
         FrameData prevFrame = null;
 
-        // 최적의 프레임 선정
         for (int i = 0; i < request.getFrames().size(); i++) {
             FrameData current = request.getFrames().get(i);
 
@@ -167,7 +164,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             throw new MeasurementCustomException(MeasurementErrorCode.LANDMARK_NOT_FOUND);
         }
 
-        // CVA,CRA 각도 도출
         double deltaYCva = Math.abs(bestFrame.getC7Y() - bestFrame.getTragusY());
         double deltaXCva = Math.abs(bestFrame.getC7X() - bestFrame.getTragusX());
         double cvaAngle = Math.toDegrees(Math.atan2(deltaYCva, deltaXCva));
@@ -188,22 +184,19 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
 
         String postureType;
         int finalScore;
+        double craDeviation = Math.abs(craAngle - 145.0);
 
-        if (cvaAngle >= 50) {
+        if (cvaAngle >= 48.7 && craDeviation <= 5.0) {
             postureType = "정상";
             finalScore = 100;
-        } else if (cvaAngle >= 45) {
-            postureType = "일자목";
-            finalScore = 80;
-        } else if (cvaAngle >= 40) {
-            postureType = "거북목";
-            finalScore = 60;
-        } else {
-            postureType = "역C자목";
+        } else if (cvaAngle < 43.8 || craDeviation > 15.0) {
+            postureType = "위험";
             finalScore = 40;
+        } else {
+            postureType = "주의";
+            finalScore = 70;
         }
 
-        // 최근 3개월간 시청한 비디오 총 시청 시간 합산
         LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
         List<VideoLog> recentLogs = videoLogRepository.findRecentWatchLogs(latestMember.getMemberId(), threeMonthsAgo);
         int totalWatchTimeMinutes = recentLogs.stream().mapToInt(VideoLog::getWatchTime).sum() / 60;
