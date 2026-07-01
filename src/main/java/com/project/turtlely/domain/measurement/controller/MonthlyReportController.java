@@ -49,19 +49,21 @@ public class MonthlyReportController {
                                                     "    \"data_status\": \"AVAILABLE\",\n" +
                                                     "    \"monthly_id\": 16,\n" +
                                                     "    \"nickname\": \"seungyeon\",\n" +
-                                                    "    \"posture_type\": \"정상\",\n" +
-                                                    "    \"score\": 73,\n" +
-                                                    "    \"cva_angle\": 48.5,\n" +
-                                                    "    \"cra_angle\": 12.3,\n" +
-                                                    "    \"cva_history\": [{\"month\": \"6월\", \"angle\": 48.5}],\n" +
-                                                    "    \"cra_history\": [{\"month\": \"6월\", \"angle\": 12.3}],\n" +
+                                                    "    \"posture_type\": \"주의\",\n" +
+                                                    "    \"score\": 70,\n" +
+                                                    "    \"cva_angle\": 45.5,\n" +
+                                                    "    \"cra_angle\": 143.2,\n" +
+                                                    "    \"cva_history\": [{\"month\": \"5월\", \"angle\": 42.1}, {\"month\": \"6월\", \"angle\": 45.5}],\n" +
+                                                    "    \"cra_history\": [{\"month\": \"5월\", \"angle\": 138.4}, {\"month\": \"6월\", \"angle\": 143.2}],\n" +
                                                     "    \"measurement_alarm\": true,\n" +
                                                     "    \"report_alarm\": true,\n" +
                                                     "    \"measured_at\": \"2026-06-26T20:53:11\",\n" +
-                                                    "    \"predicted_diseases\": [\"목디스크\", \"후두신경통\", \"척추측만증\"],\n" +
+                                                    "    \"report_year\": 2026,\n" +
+                                                    "    \"report_month\": 7,\n" +
+                                                    "    \"predicted_diseases\": [\"거북목증후군\", \"경추성 두통\", \"근막통증증후군\"],\n" +
                                                     "    \"prediction_data\": {\n" +
                                                     "      \"prediction_months\": [\"6월\", \"7월\", \"8월\", \"9월\", \"10월\", \"11월\"],\n" +
-                                                    "      \"prediction_scores\": [73, 75, 78, 80, 82, 85]\n" +
+                                                    "      \"prediction_scores\": [70, 72, 75, 78, 82, 85]\n" +
                                                     "    }\n" +
                                                     "  }\n" +
                                                     "}"
@@ -85,6 +87,8 @@ public class MonthlyReportController {
                                                     "    \"measurement_alarm\": false,\n" +
                                                     "    \"report_alarm\": false,\n" +
                                                     "    \"measured_at\": null,\n" +
+                                                    "    \"report_year\": 2026,\n" +
+                                                    "    \"report_month\": 7,\n" +
                                                     "    \"predicted_diseases\": [],\n" +
                                                     "    \"prediction_data\": {\n" +
                                                     "      \"prediction_months\": [],\n" +
@@ -100,9 +104,9 @@ public class MonthlyReportController {
     @GetMapping("/{monthly_id}")
     public ResponseEntity<ApiResponse<MonthlyReportResponse>> getMonthlyReport(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Parameter(description = "", example = "1") @PathVariable("monthly_id") Long monthlyId) {
+            @Parameter(description = "리포트 고유 ID", example = "1") @PathVariable("monthly_id") Long monthlyId) {
 
-        MonthlyReportResponse response = monthlyReportService.getMonthlyReport(monthlyId, userDetails.getUsername());
+        MonthlyReportResponse response = monthlyReportService.getMonthlyReport(userDetails.getUsername(), null, null);
 
         if ("NOT_YET".equals(response.getDataStatus())) {
             return ResponseEntity.ok(ApiResponse.onSuccess(MeasurementSuccessCode.REPORT_NOT_FOUND, response));
@@ -128,19 +132,21 @@ public class MonthlyReportController {
                                             "    \"data_status\": \"AVAILABLE\",\n" +
                                             "    \"monthly_id\": 16,\n" +
                                             "    \"nickname\": \"seungyeon\",\n" +
-                                            "    \"posture_type\": \"정상\",\n" +
-                                            "    \"score\": 73,\n" +
-                                            "    \"cva_angle\": 48.5,\n" +
-                                            "    \"cra_angle\": 12.3,\n" +
-                                            "    \"cva_history\": [{\"month\": \"6월\", \"angle\": 48.5}],\n" +
-                                            "    \"cra_history\": [{\"month\": \"6월\", \"angle\": 12.3}],\n" +
+                                            "    \"posture_type\": \"위험\",\n" +
+                                            "    \"score\": 40,\n" +
+                                            "    \"cva_angle\": 41.2,\n" +
+                                            "    \"cra_angle\": 145.0,\n" +
+                                            "    \"cva_history\": [{\"month\": \"6월\", \"angle\": 41.2}],\n" +
+                                            "    \"cra_history\": [{\"month\": \"6월\", \"angle\": 145.0}],\n" +
                                             "    \"measurement_alarm\": true,\n" +
                                             "    \"report_alarm\": true,\n" +
                                             "    \"measured_at\": \"2026-06-26T20:53:11\",\n" +
+                                            "    \"report_year\": 2026,\n" +
+                                            "    \"report_month\": 7,\n" +
                                             "    \"predicted_diseases\": [\"목디스크\", \"후두신경통\", \"척추측만증\"],\n" +
                                             "    \"prediction_data\": {\n" +
                                             "      \"prediction_months\": [\"6월\", \"7월\", \"8월\", \"9월\", \"10월\", \"11월\"],\n" +
-                                            "      \"prediction_scores\": [73, 75, 78, 80, 82, 85]\n" +
+                                            "      \"prediction_scores\": [40, 42, 45, 50, 55, 60]\n" +
                                             "    }\n" +
                                             "  }\n" +
                                             "}"

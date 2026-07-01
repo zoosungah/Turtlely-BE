@@ -70,6 +70,12 @@ public class MonthlyReportResponse {
     @JsonProperty("prediction_data")
     private PredictionDataDto predictionData;
 
+    @Schema(description = "현재 조회 대상 리포트의 연도 정보", example = "2026")
+    private Integer reportYear;
+
+    @Schema(description = "현재 조회 대상 리포트의 월 정보", example = "6")
+    private Integer reportMonth;
+
     @Getter
     @Builder
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)

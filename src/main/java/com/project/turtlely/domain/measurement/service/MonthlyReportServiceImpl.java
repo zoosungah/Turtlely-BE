@@ -31,16 +31,25 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     private final GptService gptService;
 
     @Override
-    public MonthlyReportResponse getMonthlyReport(Long monthlyId, String loginId) {
-        if (monthlyId == null || monthlyId <= 0) {
-            throw new MeasurementCustomException(MeasurementErrorCode.INVALID_REPORT_ID);
-        }
-
+    public MonthlyReportResponse getMonthlyReport(String loginId, Integer year, Integer month) {
         Member latestMember = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
 
-        MonthlyMeasurement currentMeasurement = measurementRepository.findByMonthlyIdAndMember(monthlyId, latestMember).orElse(null);
+        MonthlyMeasurement currentMeasurement;
 
+        // 연도와 월이 모두 입력되었을 때는 특정 일자를 조회하고, 값이 없으면 가장 최신 기록 보여줌
+        if (year != null && month != null) {
+            currentMeasurement = measurementRepository.findByMemberAndYearAndMonthCustom(latestMember, year, month)
+                    .stream().findFirst().orElse(null);
+        } else {
+            currentMeasurement = measurementRepository.findTopByMemberOrderByMeasuredAtDescCustom(latestMember)
+                    .stream().findFirst().orElse(null);
+        }
+
+        int targetYear = (year != null) ? year : LocalDateTime.now().getYear();
+        int targetMonth = (month != null) ? month : LocalDateTime.now().getMonthValue();
+
+        // 1. 해당 조건에 데이터가 아예 존재하지 않는 미측정(NOT_YET) 케이스 처리
         if (currentMeasurement == null) {
             return MonthlyReportResponse.builder()
                     .dataStatus("NOT_YET")
@@ -60,6 +69,8 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                             .predictionMonths(new ArrayList<>())
                             .predictionScores(new ArrayList<>())
                             .build())
+                    .reportYear(targetYear)
+                    .reportMonth(targetMonth)
                     .build();
         }
 
@@ -110,6 +121,8 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                         .predictionMonths(currentMeasurement.getPredictionMonthsList())
                         .predictionScores(currentMeasurement.getPredictionScoresList())
                         .build())
+                .reportYear(currentMeasurement.getMeasuredAt().getYear())
+                .reportMonth(currentMeasurement.getMeasuredAt().getMonthValue())
                 .build();
     }
 
@@ -182,6 +195,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             craAngle = Math.toDegrees(Math.acos(cosTheta));
         }
 
+        // CVA와 CRA 복합 판정 알고리즘 (정상, 주의, 위험 3단계 반영)
         String postureType;
         int finalScore;
         double craDeviation = Math.abs(craAngle - 145.0);
@@ -234,7 +248,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         MonthlyMeasurement saved = measurementRepository.save(measurement);
         measurementRepository.flush();
 
-        return getMonthlyReport(saved.getMonthlyId(), latestMember.getLoginId());
+        return getMonthlyReport(latestMember.getLoginId(), saved.getMeasuredAt().getYear(), saved.getMeasuredAt().getMonthValue());
     }
 
     @Override
