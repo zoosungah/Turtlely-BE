@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -100,5 +101,24 @@ public class MonthlyReportResponse {
         @Schema(description = "예측 악화 점수 리스트", example = "[73, 75, 78, 80, 82, 85]")
         @JsonProperty("prediction_scores")
         private List<Integer> predictionScores;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    @Schema(description = "월간 리포트 목록 조회 항목 DTO")
+    public static class MonthlyReportListResponse {
+        @Schema(description = "월간 리포트 고유 식별자 ID", example = "18")
+        private Long monthlyId;
+
+        @Schema(description = "리포트 해당 연도", example = "2026")
+        private int reportYear;
+
+        @Schema(description = "리포트 해당 월", example = "7")
+        private int reportMonth;
+
+        @Schema(description = "30일 측정 주기 디데이 계산용 실측 시간 데이터", example = "2026-07-02T17:15:00")
+        private LocalDateTime measuredAt;
     }
 }

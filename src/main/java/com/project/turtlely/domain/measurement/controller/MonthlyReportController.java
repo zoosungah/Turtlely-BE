@@ -21,6 +21,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "월간측정/월간리포트")
 @RestController
 @RequestMapping("/api/monthly")
@@ -29,6 +31,41 @@ import org.springframework.web.bind.annotation.*;
 public class MonthlyReportController {
 
     private final MonthlyReportService monthlyReportService;
+
+    @Operation(summary = "유저별 월간 리포트 목록 조회 API by 김승연(개발완료)", description = "유저가 가진 월간 리포트 목록을 최신순으로 조회하며, 동일 월은 최신 데이터만 반환합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "목록 조회 성공 명세",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "월 목록 성공 반환 명세",
+                                    value = "[\n" +
+                                            "  {\n" +
+                                            "    \"monthly_id\": 18,\n" +
+                                            "    \"report_year\": 2026,\n" +
+                                            "    \"report_month\": 7,\n" +
+                                            "    \"measured_at\": \"2026-07-02T17:15:00\"\n" +
+                                            "  },\n" +
+                                            "  {\n" +
+                                            "    \"monthly_id\": 14,\n" +
+                                            "    \"report_year\": 2026,\n" +
+                                            "    \"report_month\": 6,\n" +
+                                            "    \"measured_at\": \"2026-06-25T14:30:00\"\n" +
+                                            "  }\n" +
+                                            "]"
+                            )
+                    )
+            )
+    })
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<MonthlyReportResponse.MonthlyReportListResponse>>> getMonthlyReportList(
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        List<MonthlyReportResponse.MonthlyReportListResponse> response = monthlyReportService.getMonthlyReportList(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.onSuccess(MeasurementSuccessCode.REPORT_DETAIL, response));
+    }
 
     @Operation(summary = "월간 리포트 종합 조회 API by 김승연(개발완료)", description = "월간 리포트 상세 분석 데이터 내용을 종합 조회합니다.")
     @ApiResponses(value = {
@@ -106,7 +143,7 @@ public class MonthlyReportController {
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
             @Parameter(description = "리포트 고유 ID", example = "1") @PathVariable("monthly_id") Long monthlyId) {
 
-        MonthlyReportResponse response = monthlyReportService.getMonthlyReport(userDetails.getUsername(), null, null);
+        MonthlyReportResponse response = monthlyReportService.getMonthlyReport(monthlyId, userDetails.getUsername());
 
         if ("NOT_YET".equals(response.getDataStatus())) {
             return ResponseEntity.ok(ApiResponse.onSuccess(MeasurementSuccessCode.REPORT_NOT_FOUND, response));
