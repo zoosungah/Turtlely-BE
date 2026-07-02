@@ -49,8 +49,8 @@ public class GptService {
                         //2. 예상 질병 top3
                         /* - 단순 문자열 배열이 아닌 프론트 UI 바 채울 수 있게 'name(질병명)'과 'probability(0~100 확률)'를 가진 객체 구조로
                          * - 이 확률은 현재 거북목 심각도와 비례해야 함*/
-                        "2. top3_diseases: Provide a list of exactly 3 potential diseases/symptoms (in Korean) that this user is most vulnerable to. " +
-                        "Each disease item must be an object containing 'name' (e.g., '목디스크', '후두신경통', '근막통증증후군') and 'probability' (an integer from 0 to 100 representing the risk bar gauge percentage based on current posture severity).\n\n" +
+                        "2. top3_diseases: A list of 3 expected potential diseases/symptoms if this posture persists. " +
+                        "Each object in the list must strictly contain 'name' (in Korean, e.g., '목디스크') and 'score' (a calculated risk probability between 0.00 and 1.00 based on severity, e.g., 0.85).\n" +
                         "3. prediction_graph: A sequence of 6 objects representing the 'current month' and the 'subsequent 5 months' (e.g., '6월', '7월', ..., '11월'). " +
                         "Each object must contain 'month' (e.g., '6월') and 'angle' (predicted CVA angle). Higher exercise watch time leads to a faster recovery toward 50+ degrees.",
                 currentCva, currentCra, postureType, totalWatchTimeMinutes

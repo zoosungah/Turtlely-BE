@@ -97,7 +97,11 @@ public class MonthlyReportController {
                                                     "    \"measured_at\": \"2026-06-26T20:53:11\",\n" +
                                                     "    \"report_year\": 2026,\n" +
                                                     "    \"report_month\": 7,\n" +
-                                                    "    \"predicted_diseases\": [\"거북목증후군\", \"경추성 두통\", \"근막통증증후군\"],\n" +
+                                                    "    \"predicted_diseases\": [\n" +
+                                                    "      { \"name\": \"목디스크\", \"score\": 0.85 },\n" +
+                                                    "      { \"name\": \"후두신경통\", \"score\": 0.65 },\n" +
+                                                    "      { \"name\": \"척추측만증\", \"score\": 0.35 }\n" +
+                                                    "    ],\n" +
                                                     "    \"prediction_data\": {\n" +
                                                     "      \"prediction_months\": [\"6월\", \"7월\", \"8월\", \"9월\", \"10월\", \"11월\"],\n" +
                                                     "      \"prediction_scores\": [70, 72, 75, 78, 82, 85]\n" +
@@ -180,7 +184,11 @@ public class MonthlyReportController {
                                             "    \"measured_at\": \"2026-06-26T20:53:11\",\n" +
                                             "    \"report_year\": 2026,\n" +
                                             "    \"report_month\": 7,\n" +
-                                            "    \"predicted_diseases\": [\"목디스크\", \"후두신경통\", \"척추측만증\"],\n" +
+                                            "    \"predicted_diseases\": [\n" +
+                                            "      { \"name\": \"목디스크\", \"score\": 0.85 },\n" +
+                                            "      { \"name\": \"후두신경통\", \"score\": 0.65 },\n" +
+                                            "      { \"name\": \"척추측만증\", \"score\": 0.35 }\n" +
+                                            "    ],\n" +
                                             "    \"prediction_data\": {\n" +
                                             "      \"prediction_months\": [\"6월\", \"7월\", \"8월\", \"9월\", \"10월\", \"11월\"],\n" +
                                             "      \"prediction_scores\": [40, 42, 45, 50, 55, 60]\n" +

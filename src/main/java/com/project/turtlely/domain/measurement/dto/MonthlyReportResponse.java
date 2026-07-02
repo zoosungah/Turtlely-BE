@@ -65,7 +65,7 @@ public class MonthlyReportResponse {
 
     @Schema(description = "위험도 기준 유관 유발 예측 질환 Top 3", example = "[\"목디스크\", \"후두신경통\", \"척추측만증\"]")
     @JsonProperty("predicted_diseases")
-    private List<String> predictedDiseases;
+    private List<GptAnalysisResponse.DiseaseDto> predictedDiseases;
 
     @Schema(description = "미래 거북목 악화 시뮬레이션 예측 그래프 데이터")
     @JsonProperty("prediction_data")

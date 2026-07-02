@@ -209,7 +209,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         );
 
         String diseasesText = gptResult.getTop3Diseases().stream()
-                .map(com.project.turtlely.domain.measurement.dto.GptAnalysisResponse.DiseaseDto::getName)
+                .map(d -> d.getName() + ":" + String.format("%.2f", d.getScore()))
                 .collect(Collectors.joining(","));
 
         String predMonths = gptResult.getPredictionGraph().stream()
