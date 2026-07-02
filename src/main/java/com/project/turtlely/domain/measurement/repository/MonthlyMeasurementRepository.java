@@ -25,4 +25,6 @@ public interface MonthlyMeasurementRepository extends JpaRepository<MonthlyMeasu
     @Query("SELECT m FROM MonthlyMeasurement m WHERE m.member = :member ORDER BY m.measuredAt DESC")
     List<MonthlyMeasurement> findTopByMemberOrderByMeasuredAtDescCustom(@Param("member") Member member);
 
+    List<MonthlyMeasurement> findByMemberOrderByMeasuredAtDesc(Member member);
+
 }

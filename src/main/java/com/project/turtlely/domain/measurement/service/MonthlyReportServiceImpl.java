@@ -31,23 +31,17 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     private final GptService gptService;
 
     @Override
-    public MonthlyReportResponse getMonthlyReport(String loginId, Integer year, Integer month) {
+    public MonthlyReportResponse getMonthlyReport(Long monthlyId, String loginId) {
+        if (monthlyId == null || monthlyId <= 0) {
+            throw new MeasurementCustomException(MeasurementErrorCode.INVALID_REPORT_ID);
+        }
+
         Member latestMember = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
 
-        MonthlyMeasurement currentMeasurement;
+        MonthlyMeasurement currentMeasurement = measurementRepository.findByMonthlyIdAndMember(monthlyId, latestMember).orElse(null);
 
-        if (year != null && month != null) {
-            currentMeasurement = measurementRepository.findByMemberAndYearAndMonthCustom(latestMember, year, month)
-                    .stream().findFirst().orElse(null);
-        } else {
-            currentMeasurement = measurementRepository.findTopByMemberOrderByMeasuredAtDescCustom(latestMember)
-                    .stream().findFirst().orElse(null);
-        }
-
-        int targetYear = (year != null) ? year : LocalDateTime.now().getYear();
-        int targetMonth = (month != null) ? month : LocalDateTime.now().getMonthValue();
-
+        // 1. 해당 ID의 측정 데이터 기록이 존재하지 않을 때 (NOT_YET)
         if (currentMeasurement == null) {
             return MonthlyReportResponse.builder()
                     .dataStatus("NOT_YET")
@@ -66,8 +60,8 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                             .predictionMonths(new ArrayList<>())
                             .predictionScores(new ArrayList<>())
                             .build())
-                    .reportYear(targetYear)
-                    .reportMonth(targetMonth)
+                    .reportYear(LocalDateTime.now().getYear())
+                    .reportMonth(LocalDateTime.now().getMonthValue())
                     .build();
         }
 
@@ -215,7 +209,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         );
 
         String diseasesText = gptResult.getTop3Diseases().stream()
-                .map(com.project.turtlely.domain.measurement.dto.GptAnalysisResponse.DiseaseDto::getName)
+                .map(d -> d.getName() + ":" + String.format("%.2f", d.getScore()))
                 .collect(Collectors.joining(","));
 
         String predMonths = gptResult.getPredictionGraph().stream()
@@ -242,7 +236,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         MonthlyMeasurement saved = measurementRepository.save(measurement);
         measurementRepository.flush();
 
-        return getMonthlyReport(latestMember.getLoginId(), saved.getMeasuredAt().getYear(), saved.getMeasuredAt().getMonthValue());
+        return getMonthlyReport(saved.getMonthlyId(), latestMember.getLoginId());
     }
 
     @Override
@@ -303,5 +297,29 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             memberRepository.saveAll(expiredReports);
         }
         memberRepository.flush();
+    }
+
+    @Override
+    public List<MonthlyReportResponse.MonthlyReportListResponse> getMonthlyReportList(String loginId) {
+        Member latestMember = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
+
+        List<MonthlyMeasurement> allMeasurements = measurementRepository.findByMemberOrderByMeasuredAtDesc(latestMember);
+
+        return allMeasurements.stream()
+                .collect(Collectors.toMap(
+                        m -> m.getMeasuredAt().getYear() + "-" + m.getMeasuredAt().getMonthValue(),
+                        m -> MonthlyReportResponse.MonthlyReportListResponse.builder()
+                                .monthlyId(m.getMonthlyId())
+                                .reportYear(m.getMeasuredAt().getYear())
+                                .reportMonth(m.getMeasuredAt().getMonthValue())
+                                .measuredAt(m.getMeasuredAt())
+                                .build(),
+                        (existing, replacement) -> existing, // Desc 정렬 리스트이므로 처음 적재된 기존(최신)본 유지
+                        java.util.LinkedHashMap::new
+                ))
+                .values()
+                .stream()
+                .collect(Collectors.toList());
     }
 }

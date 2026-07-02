@@ -1,15 +1,13 @@
 package com.project.turtlely.domain.measurement.entity;
 
+import com.project.turtlely.domain.measurement.dto.GptAnalysisResponse;
 import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,9 +34,28 @@ public class MonthlyMeasurement extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String predictedDiseases;
-    public List<String> getPredictedDiseasesList() {
-        if (this.predictedDiseases == null || this.predictedDiseases.isBlank()) return List.of();
-        return Arrays.asList(this.predictedDiseases.split(","));
+    public List<GptAnalysisResponse.DiseaseDto> getPredictedDiseasesList() {
+        List<GptAnalysisResponse.DiseaseDto> list = new ArrayList<>();
+        if (this.predictedDiseases == null || this.predictedDiseases.isBlank()) {
+            return list;
+        }
+        try {
+            // 콤마(,)로 각각의 질병 블록을 분리 (ex: "목디스크:0.85,후두신경통:0.65")
+            String[] blocks = this.predictedDiseases.split(",");
+            for (String block : blocks) {
+                // 콜론(:)을 기준으로 이름과 소수점 스코어 분리
+                String[] parts = block.split(":");
+                if (parts.length == 2) {
+                    list.add(GptAnalysisResponse.DiseaseDto.builder()
+                            .name(parts[0])
+                            .score(Double.parseDouble(parts[1]))
+                            .build());
+                }
+            }
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+        return list;
     }
 
     @Column(columnDefinition = "TEXT")

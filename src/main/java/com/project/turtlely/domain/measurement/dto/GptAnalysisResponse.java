@@ -30,8 +30,8 @@ public class GptAnalysisResponse {
         @io.swagger.v3.oas.annotations.media.Schema(description = "질병 및 증상명", example = "목디스크")
         private String name;
 
-        @io.swagger.v3.oas.annotations.media.Schema(description = "위험도 확률 게이지 퍼센트 (0~100)", example = "73")
-        private int probability;
+        @io.swagger.v3.oas.annotations.media.Schema(description = "위험도 확률 스코어 지표 (0.0 ~ 1.0)", example = "0.85")
+        private double score;
     }
 
     @Getter
