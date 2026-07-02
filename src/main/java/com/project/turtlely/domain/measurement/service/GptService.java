@@ -32,7 +32,7 @@ public class GptService {
         headers.setBearerAuth(apiKey);
 
         String systemPrompt = "You are an expert orthopedic and rehabilitation AI medical advisor specialized in forward head posture (turtle neck syndrome). " +
-                "You must provide a response strictly in JSON format matching the requested schema. Do not include any markdown or backticks like ```json.";
+                "You must provide a response strictly in JSON format matching the requested schema. Do not include any markdown formatting or backticks like ```json.";
 
         String userPrompt = String.format(
                 "Our user's current posture analysis results are as follows:\n" +
@@ -40,12 +40,19 @@ public class GptService {
                         "- Current CRA (Craniocervical Angle): %.2f degrees\n" +
                         "- Diagnosed Posture Type: %s\n" +
                         "- Total exercise video watch time over the last 3 months: %d minutes\n\n" +
-                        "Please generate a medical report including:\n" +
-                        "1. general_opinion: A comprehensive diagnosis and advice in Korean (around 2-3 sentences).\n" +
-                        "2. top3_diseases: A list of 3 expected potential diseases/symptoms (in Korean) if this posture persists (e.g., 목디스크, 근막통증증후군).\n" +
+                        "Please generate a medically logical report including the following strictly defined JSON keys:\n\n" +
+                        //1. 경추 건강 점수 산출
+                        /* - 100점 만점에서 시작해서 목 상태에 따라 비례해서 감점
+                        *  - CVA 표존인 48.7도에서 멀어질수록, CRA 표준 145도에서 멀어질수록 감점*/
+                        "1. cervical_health_score: Calculate a precise cervical health score from 0 to 100 as an integer. " +
+                        "Start at 100 and deduct points based on biomechanical stress: normal CVA is 48.7+ degrees and normal CRA is exactly 145 degrees (deduct based on deviation).\n\n " +
+                        //2. 예상 질병 top3
+                        /* - 단순 문자열 배열이 아닌 프론트 UI 바 채울 수 있게 'name(질병명)'과 'probability(0~100 확률)'를 가진 객체 구조로
+                         * - 이 확률은 현재 거북목 심각도와 비례해야 함*/
+                        "2. top3_diseases: Provide a list of exactly 3 potential diseases/symptoms (in Korean) that this user is most vulnerable to. " +
+                        "Each disease item must be an object containing 'name' (e.g., '목디스크', '후두신경통', '근막통증증후군') and 'probability' (an integer from 0 to 100 representing the risk bar gauge percentage based on current posture severity).\n\n" +
                         "3. prediction_graph: A sequence of 6 objects representing the 'current month' and the 'subsequent 5 months' (e.g., '6월', '7월', ..., '11월'). " +
-                        "Each object must contain 'month' (e.g., '6월') and 'angle' (predicted Cva angle). " +
-                        "Calculate the improvement trend logically: assume that higher total exercise watch time leads to better recovery and a faster increase toward normal CVA angle (50+ degrees). If watch time is 0 or very low, the improvement should be minimal or slightly worsening.",
+                        "Each object must contain 'month' (e.g., '6월') and 'angle' (predicted CVA angle). Higher exercise watch time leads to a faster recovery toward 50+ degrees.",
                 currentCva, currentCra, postureType, totalWatchTimeMinutes
         );
 

@@ -31,25 +31,29 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     private final GptService gptService;
 
     @Override
-    public MonthlyReportResponse getMonthlyReport(Long monthlyId, String loginId) {
-        if (monthlyId == null || monthlyId <= 0) {
-            throw new MeasurementCustomException(MeasurementErrorCode.INVALID_REPORT_ID);
-        }
-
-        // 💡 [변경 완료] 기존 id 조회 방식에서 시큐리티 loginId 조회 방식으로 고도화
+    public MonthlyReportResponse getMonthlyReport(String loginId, Integer year, Integer month) {
         Member latestMember = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
 
-        MonthlyMeasurement currentMeasurement = measurementRepository.findByMonthlyIdAndMember(monthlyId, latestMember).orElse(null);
+        MonthlyMeasurement currentMeasurement;
 
-        // 1. 미측정(NOT_YET)일때
+        if (year != null && month != null) {
+            currentMeasurement = measurementRepository.findByMemberAndYearAndMonthCustom(latestMember, year, month)
+                    .stream().findFirst().orElse(null);
+        } else {
+            currentMeasurement = measurementRepository.findTopByMemberOrderByMeasuredAtDescCustom(latestMember)
+                    .stream().findFirst().orElse(null);
+        }
+
+        int targetYear = (year != null) ? year : LocalDateTime.now().getYear();
+        int targetMonth = (month != null) ? month : LocalDateTime.now().getMonthValue();
+
         if (currentMeasurement == null) {
             return MonthlyReportResponse.builder()
                     .dataStatus("NOT_YET")
                     .monthlyId(null)
                     .nickname(latestMember.getNickname())
                     .postureType("데이터 없음")
-                    .score(null)
                     .cvaAngle(null)
                     .craAngle(null)
                     .cvaHistory(new ArrayList<>())
@@ -62,10 +66,11 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                             .predictionMonths(new ArrayList<>())
                             .predictionScores(new ArrayList<>())
                             .build())
+                    .reportYear(targetYear)
+                    .reportMonth(targetMonth)
                     .build();
         }
 
-        // 2. 데이터가 존재하는 정상 조회(AVAILABLE) 케이스일 때
         List<MonthlyMeasurement> rawHistory = measurementRepository.findTop6ByMemberOrderByMeasuredAtDesc(latestMember);
 
         List<MonthlyMeasurement> chronologicalHistory = new ArrayList<>(rawHistory);
@@ -113,6 +118,8 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                         .predictionMonths(currentMeasurement.getPredictionMonthsList())
                         .predictionScores(currentMeasurement.getPredictionScoresList())
                         .build())
+                .reportYear(currentMeasurement.getMeasuredAt().getYear())
+                .reportMonth(currentMeasurement.getMeasuredAt().getMonthValue())
                 .build();
     }
 
@@ -186,20 +193,14 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         }
 
         String postureType;
-        int finalScore;
+        double craDeviation = Math.abs(craAngle - 145.0);
 
-        if (cvaAngle >= 50) {
+        if (cvaAngle >= 48.7 && craDeviation <= 5.0) {
             postureType = "정상";
-            finalScore = 100;
-        } else if (cvaAngle >= 45) {
-            postureType = "일자목";
-            finalScore = 80;
-        } else if (cvaAngle >= 40) {
-            postureType = "거북목";
-            finalScore = 60;
+        } else if (cvaAngle < 43.8 || craDeviation > 15.0) {
+            postureType = "위험";
         } else {
-            postureType = "역C자목";
-            finalScore = 40;
+            postureType = "주의";
         }
 
         LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
@@ -213,7 +214,9 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 totalWatchTimeMinutes
         );
 
-        String diseasesText = String.join(",", gptResult.getTop3Diseases());
+        String diseasesText = gptResult.getTop3Diseases().stream()
+                .map(com.project.turtlely.domain.measurement.dto.GptAnalysisResponse.DiseaseDto::getName)
+                .collect(Collectors.joining(","));
 
         String predMonths = gptResult.getPredictionGraph().stream()
                 .map(p -> p.getMonth())
@@ -230,7 +233,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .cvaAngle((float) cvaAngle)
                 .craAngle((float) craAngle)
                 .postureType(postureType)
-                .score(finalScore)
+                .score(gptResult.getCervicalHealthScore())
                 .predictedDiseases(diseasesText)
                 .predictionData(finalPredictionData)
                 .measuredAt(LocalDateTime.now())
@@ -239,7 +242,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         MonthlyMeasurement saved = measurementRepository.save(measurement);
         measurementRepository.flush();
 
-        return getMonthlyReport(saved.getMonthlyId(), latestMember.getLoginId());
+        return getMonthlyReport(latestMember.getLoginId(), saved.getMeasuredAt().getYear(), saved.getMeasuredAt().getMonthValue());
     }
 
     @Override
@@ -276,5 +279,29 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .alarmType(type)
                 .alarmSet(true)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void expireExpiredAlarms() {
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+
+        List<Member> expiredMeasurements = memberRepository.findByMeasurementAlarmTrueAndMeasurementAlarmSetAtBefore(oneMonthAgo);
+        for (Member member : expiredMeasurements) {
+            member.updateMeasurementAlarm(false);
+        }
+
+        List<Member> expiredReports = memberRepository.findByReportAlarmTrueAndReportAlarmSetAtBefore(oneMonthAgo);
+        for (Member member : expiredReports) {
+            member.updateReportAlarm(false);
+        }
+
+        if (!expiredMeasurements.isEmpty()) {
+            memberRepository.saveAll(expiredMeasurements);
+        }
+        if (!expiredReports.isEmpty()) {
+            memberRepository.saveAll(expiredReports);
+        }
+        memberRepository.flush();
     }
 }

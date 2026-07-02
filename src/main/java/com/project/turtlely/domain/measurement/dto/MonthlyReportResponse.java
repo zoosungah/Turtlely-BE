@@ -31,7 +31,7 @@ public class MonthlyReportResponse {
     @JsonProperty("posture_type")
     private String postureType;
 
-    @Schema(description = "종합 자세 점수 (0 ~ 100)", example = "85")
+    @Schema(description = "GPT 분석 기반 정밀 경추 건강 점수 (0 ~ 100)", example = "73")
     private Integer score;
 
     @Schema(description = "최근 CVA 측정 각도 수치", example = "48.5")
@@ -69,6 +69,12 @@ public class MonthlyReportResponse {
     @Schema(description = "미래 거북목 악화 시뮬레이션 예측 그래프 데이터")
     @JsonProperty("prediction_data")
     private PredictionDataDto predictionData;
+
+    @Schema(description = "현재 조회 대상 리포트의 연도 정보", example = "2026")
+    private Integer reportYear;
+
+    @Schema(description = "현재 조회 대상 리포트의 월 정보", example = "6")
+    private Integer reportMonth;
 
     @Getter
     @Builder
