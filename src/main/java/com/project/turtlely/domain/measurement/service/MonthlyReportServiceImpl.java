@@ -56,7 +56,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                     .monthlyId(null)
                     .nickname(latestMember.getNickname())
                     .postureType("데이터 없음")
-                    .score(null)
                     .cvaAngle(null)
                     .craAngle(null)
                     .cvaHistory(new ArrayList<>())
@@ -195,20 +194,15 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             craAngle = Math.toDegrees(Math.acos(cosTheta));
         }
 
-        // CVA와 CRA 복합 판정 알고리즘 (정상, 주의, 위험 3단계 반영)
         String postureType;
-        int finalScore;
         double craDeviation = Math.abs(craAngle - 145.0);
 
         if (cvaAngle >= 48.7 && craDeviation <= 5.0) {
             postureType = "정상";
-            finalScore = 100;
         } else if (cvaAngle < 43.8 || craDeviation > 15.0) {
             postureType = "위험";
-            finalScore = 40;
         } else {
             postureType = "주의";
-            finalScore = 70;
         }
 
         LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
@@ -222,7 +216,9 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 totalWatchTimeMinutes
         );
 
-        String diseasesText = String.join(",", gptResult.getTop3Diseases());
+        String diseasesText = gptResult.getTop3Diseases().stream()
+                .map(com.project.turtlely.domain.measurement.dto.GptAnalysisResponse.DiseaseDto::getName)
+                .collect(Collectors.joining(","));
 
         String predMonths = gptResult.getPredictionGraph().stream()
                 .map(p -> p.getMonth())
@@ -239,7 +235,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .cvaAngle((float) cvaAngle)
                 .craAngle((float) craAngle)
                 .postureType(postureType)
-                .score(finalScore)
+                .score(gptResult.getCervicalHealthScore())
                 .predictedDiseases(diseasesText)
                 .predictionData(finalPredictionData)
                 .measuredAt(LocalDateTime.now())
