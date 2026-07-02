@@ -37,7 +37,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
 
         MonthlyMeasurement currentMeasurement;
 
-        // 연도와 월이 모두 입력되었을 때는 특정 일자를 조회하고, 값이 없으면 가장 최신 기록 보여줌
         if (year != null && month != null) {
             currentMeasurement = measurementRepository.findByMemberAndYearAndMonthCustom(latestMember, year, month)
                     .stream().findFirst().orElse(null);
@@ -49,7 +48,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         int targetYear = (year != null) ? year : LocalDateTime.now().getYear();
         int targetMonth = (month != null) ? month : LocalDateTime.now().getMonthValue();
 
-        // 1. 해당 조건에 데이터가 아예 존재하지 않는 미측정(NOT_YET) 케이스 처리
         if (currentMeasurement == null) {
             return MonthlyReportResponse.builder()
                     .dataStatus("NOT_YET")
@@ -281,5 +279,29 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .alarmType(type)
                 .alarmSet(true)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void expireExpiredAlarms() {
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+
+        List<Member> expiredMeasurements = memberRepository.findByMeasurementAlarmTrueAndMeasurementAlarmSetAtBefore(oneMonthAgo);
+        for (Member member : expiredMeasurements) {
+            member.updateMeasurementAlarm(false);
+        }
+
+        List<Member> expiredReports = memberRepository.findByReportAlarmTrueAndReportAlarmSetAtBefore(oneMonthAgo);
+        for (Member member : expiredReports) {
+            member.updateReportAlarm(false);
+        }
+
+        if (!expiredMeasurements.isEmpty()) {
+            memberRepository.saveAll(expiredMeasurements);
+        }
+        if (!expiredReports.isEmpty()) {
+            memberRepository.saveAll(expiredReports);
+        }
+        memberRepository.flush();
     }
 }

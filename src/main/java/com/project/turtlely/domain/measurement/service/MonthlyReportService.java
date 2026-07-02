@@ -13,4 +13,5 @@ public interface MonthlyReportService {
     MonthlyReportResponse analyzeAndSaveReport(ReportAnalyzeRequest request, String loginId);
     // 정기 측정 주기(MEASURE) 또는 리포트 발행(RESULT) 알림 신청
     AlarmResponse registerAlarm(AlarmRequest request, String loginId);
+    void expireExpiredAlarms();
 }

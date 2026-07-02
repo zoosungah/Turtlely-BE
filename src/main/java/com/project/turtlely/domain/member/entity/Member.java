@@ -6,6 +6,8 @@ import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Builder
@@ -44,13 +46,24 @@ public class Member extends BaseEntity {
     @Column(name = "is_report_alarm", nullable = false)
     private boolean isReportAlarm = false;
 
-    // 서비스 레이어에서 호출 시 JPA 변경 감지를 통해 DB에 자동 반영됨
+    // 측정 알림 신청 일시를 기록하는 필드
+    @Column(name = "measurement_alarm_set_at")
+    private LocalDateTime measurementAlarmSetAt;
+
+    // 리포트 알림 신청 일시를 기록하는 필드
+    @Column(name = "report_alarm_set_at")
+    private LocalDateTime reportAlarmSetAt;
+
+    // 서비스 레이어 호출 시 상태 업데이트와 함께 신청 시점 기록/초기화 수행
     public void updateMeasurementAlarm(boolean status) {
         this.isMeasurementAlarm = status;
+        this.measurementAlarmSetAt = status ? LocalDateTime.now() : null;
     }
-    // 서비스 레이어에서 호출 시 JPA 변경 감지를 통해 DB에 자동 반영됨
+
+    // 서비스 레이어 호출 시 상태 업데이트와 함께 신청 시점 기록/초기화 수행
     public void updateReportAlarm(boolean status) {
         this.isReportAlarm = status;
+        this.reportAlarmSetAt = status ? LocalDateTime.now() : null;
     }
 
     // 비번 변경 시 사용

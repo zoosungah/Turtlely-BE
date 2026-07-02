@@ -4,7 +4,9 @@ import com.project.turtlely.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
@@ -22,4 +24,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 전화번호로 회원 찾기
     Optional<Member> findByPhoneNumber(String phoneNumber);
+
+    // 측정 알림 신청 이후 한 달(30일)이 지난 유저 리스트 조회
+    List<Member> findByMeasurementAlarmTrueAndMeasurementAlarmSetAtBefore(LocalDateTime dateTime);
+
+    // 리포트 발행 알림 신청 이후 한 달(30일)이 지난 유저 리스트 조회
+    List<Member> findByReportAlarmTrueAndReportAlarmSetAtBefore(LocalDateTime dateTime);
 }
