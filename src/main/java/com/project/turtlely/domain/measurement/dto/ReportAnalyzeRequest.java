@@ -33,5 +33,15 @@ public class ReportAnalyzeRequest {
 
         @JsonProperty("c7_y")
         private double c7Y;
+
+        // HW 3축 가속도 데이터
+        @JsonProperty("hw_accel_x")
+        private double hwAccelX;
+
+        @JsonProperty("hw_accel_y")
+        private double hwAccelY;
+
+        @JsonProperty("hw_accel_z")
+        private double hwAccelZ;
     }
 }

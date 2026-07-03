@@ -30,6 +30,8 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     private final VideoLogRepository videoLogRepository;
     private final GptService gptService;
 
+    private final MonthlyHWService monthlyHWService;
+
     @Override
     public MonthlyReportResponse getMonthlyReport(Long monthlyId, String loginId) {
         if (monthlyId == null || monthlyId <= 0) {
@@ -197,6 +199,13 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
             postureType = "주의";
         }
 
+        float calibrationC = monthlyHWService.calculateCalibrationC(
+                cvaAngle,
+                bestFrame.getHwAccelX(),
+                bestFrame.getHwAccelY(),
+                bestFrame.getHwAccelZ()
+        );
+
         LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
         List<VideoLog> recentLogs = videoLogRepository.findRecentWatchLogs(latestMember.getMemberId(), threeMonthsAgo);
         int totalWatchTimeMinutes = recentLogs.stream().mapToInt(VideoLog::getWatchTime).sum() / 60;
@@ -231,6 +240,11 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .predictedDiseases(diseasesText)
                 .predictionData(finalPredictionData)
                 .measuredAt(LocalDateTime.now())
+
+                .hwAccelX((float) bestFrame.getHwAccelX())
+                .hwAccelY((float) bestFrame.getHwAccelY())
+                .hwAccelZ((float) bestFrame.getHwAccelZ())
+                .calibrationC(calibrationC)
                 .build();
 
         MonthlyMeasurement saved = measurementRepository.save(measurement);
