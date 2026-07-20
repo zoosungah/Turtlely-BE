@@ -281,12 +281,12 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     public void expireExpiredAlarms() {
         LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
 
-        List<Member> expiredMeasurements = memberRepository.findByMeasurementAlarmTrueAndMeasurementAlarmSetAtBefore(oneMonthAgo);
+        List<Member> expiredMeasurements = memberRepository.findByIsMeasurementAlarmTrueAndMeasurementAlarmSetAtBefore(oneMonthAgo);
         for (Member member : expiredMeasurements) {
             member.updateMeasurementAlarm(false);
         }
 
-        List<Member> expiredReports = memberRepository.findByReportAlarmTrueAndReportAlarmSetAtBefore(oneMonthAgo);
+        List<Member> expiredReports = memberRepository.findByIsReportAlarmTrueAndReportAlarmSetAtBefore(oneMonthAgo);
         for (Member member : expiredReports) {
             member.updateReportAlarm(false);
         }
