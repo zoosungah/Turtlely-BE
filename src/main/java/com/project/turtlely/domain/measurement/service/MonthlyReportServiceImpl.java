@@ -29,6 +29,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     private final MemberRepository memberRepository;
     private final VideoLogRepository videoLogRepository;
     private final GptService gptService;
+    private final com.project.turtlely.domain.notification.repository.NotificationRepository notificationRepository;
 
     @Override
     public MonthlyReportResponse getMonthlyReport(Long monthlyId, String loginId) {
@@ -321,5 +322,29 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                 .values()
                 .stream()
                 .collect(Collectors.toList());
+    }
+    // 30일 경과한 회원 선별-> 알림생성, 저장
+    @Override
+    @Transactional
+    public void createMonthlyMeasurementAlerts() {
+        // 오늘 날짜 기준 30일 전 계산
+        LocalDateTime targetDate = LocalDateTime.now().minusDays(30);
+
+        // 마지막 측정일 기준 30일이 경과한 타겟 회원 추출
+        List<Member> targetMembers = measurementRepository.findMembersToNotify(targetDate);
+
+        for (Member member : targetMembers) {
+            com.project.turtlely.domain.notification.entity.Notification notification =
+                    com.project.turtlely.domain.notification.entity.Notification.builder()
+                            .member(member)
+                            .type(com.project.turtlely.domain.notification.enums.NotificationType.MONTHLY)
+                            .content("이번 달 월간 거북목 측정을 할 시기가 되었어요!")
+                            .status(com.project.turtlely.domain.notification.enums.NotificationStatus.SENT)
+                            .sentAt(LocalDateTime.now())
+                            .build();
+
+            notificationRepository.save(notification);
+        }
+        notificationRepository.flush();
     }
 }
