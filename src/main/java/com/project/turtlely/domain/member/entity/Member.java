@@ -70,4 +70,9 @@ public class Member extends BaseEntity {
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+
+    // 닉네임 변경 시 사용
+    public void updateNickname(String newNickname) {
+        this.nickname = newNickname;
+    }
 }
