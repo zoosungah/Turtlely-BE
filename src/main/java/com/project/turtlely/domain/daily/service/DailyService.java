@@ -31,6 +31,13 @@ public class DailyService {
             throw new DailyException(DailyErrorCode.REPORT_ACCESS_DENIED);
         }
 
+        int calculatedScore = calculateTotalScore(
+                dailyReport.getCautionDuration(),
+                dailyReport.getWarningDuration(),
+                dailyReport.getTotalMeasurementDuration(),
+                dailyReport.getTotalScore() // Fallback용 기존 점수
+        );
+
         // 3. 데이터 반환
         return DailyResponseDTO.DailyReportDTO.builder()
                 .postureScore(dailyReport.getTotalScore())
@@ -38,6 +45,23 @@ public class DailyService {
                 .cautionCount(dailyReport.getCautionDuration())
                 .warningCount(dailyReport.getWarningDuration())
                 .build();
+    }
+
+    private int calculateTotalScore(int cautionDuration, int warningDuration, int totalDuration, int defaultScore) {
+        // 전체 측정 시간이 없거나 데이터가 유효하지 않은 경우 예외 처리 또는 기존 점수 반환
+        if (totalDuration <= 0) {
+            return defaultScore > 0 ? defaultScore : 0;
+        }
+
+        // 1. 가중치가 적용된 페널티 초 계산
+        double penaltySeconds = (cautionDuration * 0.4) + (warningDuration * 1.0);
+
+        // 2. 전체 측정 시간 대비 페널티 비율 환산 후 100점 만점 적용
+        double penaltyRatio = penaltySeconds / totalDuration * 100;
+        int finalScore = (int) Math.round(100 - penaltyRatio);
+
+        // 3. 스코어 바운더리 체크 (0점 ~ 100점 제한)
+        return Math.max(0, Math.min(100, finalScore));
     }
 
     /**

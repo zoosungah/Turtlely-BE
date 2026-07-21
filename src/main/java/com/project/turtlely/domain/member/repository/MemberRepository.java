@@ -30,4 +30,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 리포트 발행 알림 신청 이후 한 달(30일)이 지난 유저 리스트 조회
     List<Member> findByIsReportAlarmTrueAndReportAlarmSetAtBefore(LocalDateTime dateTime);
+
+    // 닉네임 중복 확인
+    boolean existsByNickname(String nickname);
+
 }
