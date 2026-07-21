@@ -43,9 +43,15 @@ public class GptService {
                         "Please generate a medically logical report including the following strictly defined JSON keys:\n\n" +
                         //1. 경추 건강 점수 산출
                         /* - 100점 만점에서 시작해서 목 상태에 따라 비례해서 감점
-                        *  - CVA 표존인 48.7도에서 멀어질수록, CRA 표준 145도에서 멀어질수록 감점*/
-                        "1. cervical_health_score: Calculate a precise cervical health score from 0 to 100 as an integer. " +
-                        "Start at 100 and deduct points based on biomechanical stress: normal CVA is 48.7+ degrees and normal CRA is exactly 145 degrees (deduct based on deviation).\n\n " +
+                         *  - CVA 표존인 48.7도에서 멀어질수록, CRA 표준 145도에서 멀어질수록 감점*/
+                        // - 백엔드에서 결정된 postureType(%s) 바운더리 내에서만 점수 부여 (CRA 오차로 세부 보정)
+                        "1. cervical_health_score: An integer score from 0 to 100. " +
+                        "You MUST assign the score strictly within the boundary determined by the given Diagnosed Posture Type ('%s'):\n" +
+                        "   - If Diagnosed Posture Type is '정상' (Normal): Score MUST be between 85 and 100.\n" +
+                        "   - If Diagnosed Posture Type is '주의' (Caution): Score MUST be between 70 and 84.\n" +
+                        "   - If Diagnosed Posture Type is '위험' (Warning/Severe): Score MUST be below 69.\n" +
+                        "   * CRITICAL RULE: Under NO circumstances should a '위험' posture receive a score higher than 69!\n" +
+                        "   (Fine-tune the exact score within the allowed range based on CRA deviation from 145 degrees).\n\n" +
                         //2. 예상 질병 top3
                         /* - 단순 문자열 배열이 아닌 프론트 UI 바 채울 수 있게 'name(질병명)'과 'probability(0~100 확률)'를 가진 객체 구조로
                          * - 이 확률은 현재 거북목 심각도와 비례해야 함*/
@@ -53,7 +59,7 @@ public class GptService {
                         "Each object in the list must strictly contain 'name' (in Korean, e.g., '목디스크') and 'score' (a calculated risk probability between 0.00 and 1.00 based on severity, e.g., 0.85).\n" +
                         "3. prediction_graph: A sequence of 6 objects representing the 'current month' and the 'subsequent 5 months' (e.g., '6월', '7월', ..., '11월'). " +
                         "Each object must contain 'month' (e.g., '6월') and 'angle' (predicted CVA angle). Higher exercise watch time leads to a faster recovery toward 50+ degrees.",
-                currentCva, currentCra, postureType, totalWatchTimeMinutes
+                currentCva, currentCra, postureType, totalWatchTimeMinutes, postureType, postureType
         );
 
         Map<String, Object> requestBody = Map.of(
