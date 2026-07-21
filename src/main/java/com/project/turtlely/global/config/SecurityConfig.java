@@ -39,7 +39,9 @@ public class SecurityConfig {
                                 "/error",
                                 "/auth/**",
                                 "/api/sms/**",
-                                "/api/account/**"
+                                "/api/account/**",
+                                "/api/admin/exercise/**",
+                                "/api/exercise/**"
 //                                "/api/daily/**",
 //                                "/api/monthly/**"
                         ).permitAll()
