@@ -17,4 +17,6 @@ public interface MonthlyReportService {
     AlarmResponse registerAlarm(AlarmRequest request, String loginId);
     void expireExpiredAlarms();
     List<MonthlyReportResponse.MonthlyReportListResponse> getMonthlyReportList(String loginId);
+    // 알림 생성 메서드 추가
+    void createMonthlyMeasurementAlerts();
 }

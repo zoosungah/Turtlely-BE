@@ -27,4 +27,10 @@ public interface MonthlyMeasurementRepository extends JpaRepository<MonthlyMeasu
 
     List<MonthlyMeasurement> findByMemberOrderByMeasuredAtDesc(Member member);
 
+    // 가장 최근 측정일이 30일 이상 지난 회원 목록과 마지막 측정 데이터를 조회
+    @Query("SELECT m.member FROM MonthlyMeasurement m " +
+            "WHERE m.measuredAt = (SELECT MAX(sub.measuredAt) FROM MonthlyMeasurement sub WHERE sub.member = m.member) " +
+            "AND m.measuredAt <= :targetDate")
+    List<Member> findMembersToNotify(@Param("targetDate") java.time.LocalDateTime targetDate);
+
 }

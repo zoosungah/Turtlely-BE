@@ -4,5 +4,6 @@ public enum NotificationType {
     DAILY,
     MONTHLY,
     BATTERY,
-    SYSTEM
+    SYSTEM,
+    TURTLENECK
 }
