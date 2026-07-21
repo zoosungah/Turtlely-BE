@@ -39,4 +39,25 @@ public class NotificationService {
         }
         notificationRepository.flush();
     }
+
+    // 거북목 교정 알림 생성
+    @Transactional
+    public void createTurtleneckCorrectionAlerts() {
+        List<Member> allMembers = memberRepository.findAll();
+
+        for (Member member : allMembers) {
+            String content = member.getNickname() + "님 작업 중이신가요? 거북목을 교정할 시간이에요";
+
+            Notification notification = Notification.builder()
+                    .member(member)
+                    .type(NotificationType.TURTLENECK)
+                    .content(content)
+                    .status(NotificationStatus.SENT)
+                    .sentAt(LocalDateTime.now())
+                    .build();
+
+            notificationRepository.save(notification);
+        }
+        notificationRepository.flush();
+    }
 }

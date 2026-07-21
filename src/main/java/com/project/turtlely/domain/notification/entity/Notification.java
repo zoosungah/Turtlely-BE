@@ -27,7 +27,8 @@ public class Notification extends BaseEntity {
     private Member member;
 
     @Enumerated(EnumType.STRING)
-    private NotificationType type; // DAILY, MONTHLY, BATTERY, SYSTEM
+    @Column(name = "type", length = 30)
+    private NotificationType type; // DAILY, MONTHLY, BATTERY, SYSTEM, TURTLENECK
 
     @Column(columnDefinition = "TEXT")
     private String content;
