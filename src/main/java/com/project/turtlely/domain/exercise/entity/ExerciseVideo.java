@@ -4,10 +4,12 @@ import com.project.turtlely.domain.exercise.enums.ExerciseCategory;
 import com.project.turtlely.domain.exercise.enums.PostureType;
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 
 @Entity
 @Getter
+@Builder
 public class ExerciseVideo extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
