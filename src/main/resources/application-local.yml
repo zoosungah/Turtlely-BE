@@ -38,3 +38,8 @@ coolsms:
 # OpenAI 설정
 openai:
   secret-key: ${OPENAI_SECRET_KEY}
+
+# Youtube API 설정
+youtube:
+  api:
+    key: ${YOUTUBE_API_KEY}

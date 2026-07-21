@@ -74,7 +74,7 @@ public class YoutubeFetchService {
 
                 String title = item.get("snippet").get("title").asText();
                 String thumbnailUrl = item.get("snippet").get("thumbnails").get("high").get("url").asText();
-                int durationMinutes = new Random().nextInt(31); // 0~30분
+                int durationMinutes = new Random().nextInt(21); // 0~20분
 
                 ExerciseVideo video = ExerciseVideo.builder()
                         .youtubeVideoKey(videoKey)
