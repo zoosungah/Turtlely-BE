@@ -2,16 +2,23 @@ package com.project.turtlely.domain.notification.service;
 
 import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.domain.member.repository.MemberRepository;
+import com.project.turtlely.domain.notification.dto.NotificationResponse.NotificationDto;
+import com.project.turtlely.domain.notification.dto.NotificationResponse.NotificationListDto;
 import com.project.turtlely.domain.notification.entity.Notification;
 import com.project.turtlely.domain.notification.enums.NotificationStatus;
 import com.project.turtlely.domain.notification.enums.NotificationType;
+import com.project.turtlely.domain.notification.exception.NotificationErrorCode;
+import com.project.turtlely.domain.notification.exception.NotificationErrorCode.NotificationCustomException;
 import com.project.turtlely.domain.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +28,34 @@ public class NotificationService {
     private final MemberRepository memberRepository;
     private final NotificationRepository notificationRepository;
 
-    // 매일 오후 4시 전체 회원 대상 데일리 스트레칭 권장 알림 생성
+    public NotificationListDto getRecentNotifications(String loginId, Pageable pageable) {
+        Member member = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
+
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+
+        Page<Notification> notifications = notificationRepository
+                .findByMemberAndSentAtAfterOrderBySentAtDesc(member, sevenDaysAgo, pageable);
+
+        if (notifications.isEmpty()) {
+            throw new NotificationCustomException(NotificationErrorCode.ALARM_EMPTY);
+        }
+
+        List<NotificationDto> dtoList = notifications.stream()
+                .map(n -> NotificationDto.builder()
+                        .notificationId(n.getNotificationId())
+                        .type(n.getType())
+                        .content(n.getContent())
+                        .isRead(false)
+                        .createdAt(n.getSentAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        return NotificationListDto.builder()
+                .notificationList(dtoList)
+                .build();
+    }
+
     @Transactional
     public void createDailyStretchingAlerts() {
         List<Member> allMembers = memberRepository.findAll();
@@ -40,7 +74,6 @@ public class NotificationService {
         notificationRepository.flush();
     }
 
-    // 거북목 교정 알림 생성
     @Transactional
     public void createTurtleneckCorrectionAlerts() {
         List<Member> allMembers = memberRepository.findAll();
