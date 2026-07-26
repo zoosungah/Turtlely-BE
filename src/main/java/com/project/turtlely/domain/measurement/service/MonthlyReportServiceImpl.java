@@ -192,9 +192,13 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         String postureType;
         double craDeviation = Math.abs(craAngle - 145.0);
 
-        if (cvaAngle >= 48.7 && craDeviation <= 5.0) {
-            postureType = "정상";
-        } else if (cvaAngle < 43.8 || craDeviation > 15.0) {
+        if (cvaAngle >= 48.7) {
+            if (craDeviation <= 10.0) {
+                postureType = "정상";
+            } else {
+                postureType = "주의";
+            }
+        } else if (cvaAngle < 43.8 || craDeviation > 20.0) {
             postureType = "위험";
         } else {
             postureType = "주의";
