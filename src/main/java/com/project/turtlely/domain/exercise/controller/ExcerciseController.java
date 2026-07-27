@@ -9,15 +9,13 @@ import com.project.turtlely.domain.member.service.PrincipalDetails;
 import com.project.turtlely.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "운동존 API", description = "운동 영상 조회 및 북마크 관련 API")
 @RestController
@@ -63,5 +61,45 @@ public class ExcerciseController {
         );
 
         return ApiResponse.onSuccess(ExerciseSuccessCode.EXERCISE_LIST_GET_SUCCESS, result);
+    }
+
+    @Operation(
+            summary = "영상 북마크 API",
+            description = "운동 영상을 북마크합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "북마크 상태 변경 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"isSuccess\": true,\n" +
+                                            "  \"code\": \"BOOKMARK_SUCCESS\",\n" +
+                                            "  \"message\": \"북마크 상태가 변경되었습니다.\",\n" +
+                                            "  \"result\": {\n" +
+                                            "    \"is_bookmarked\": true\n" +
+                                            "  }\n" +
+                                            "}"
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "요청 ID에 해당하는 운동 영상 존재X",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @PostMapping("/{video_id}")
+    public ApiResponse<ExerciseResponseDTO.ExerciseBookmarkDto> toggleBookmark(
+            @PathVariable("video_id") Long videoId,
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+
+        Long memberId = principalDetails.getMember().getMemberId();
+        ExerciseResponseDTO.ExerciseBookmarkDto result = exerciseService.toggleBookmark(videoId, memberId);
+
+        return ApiResponse.onSuccess(ExerciseSuccessCode.BOOKMARK_SUCCESS, result);
     }
 }

@@ -1,4 +1,5 @@
 package com.project.turtlely.domain.exercise.dto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.turtlely.domain.exercise.entity.ExerciseVideo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,5 +39,14 @@ public class ExerciseResponseDTO {
                     .isBookmarked(isBookmarked)
                     .build();
         }
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ExerciseBookmarkDto {
+        @JsonProperty("is_bookmarked")
+        private Boolean isBookmarked;
     }
 }
