@@ -79,7 +79,7 @@ public class NotificationController {
         return ApiResponse.onSuccess(NotificationSuccessCode.NOTIFICATION_GET_SUCCESS, result);
     }
 
-    @Operation(summary = "알림 읽음 처리", description = "특정 알림을 읽음 상태(isRead=true)로 변경합니다.")
+    @Operation(summary = "알림 읽음 처리 by 김승연(개발 완료)", description = "특정 알림을 읽음 상태(isRead=true)로 변경합니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
@@ -108,7 +108,7 @@ public class NotificationController {
         return ApiResponse.onSuccess(NotificationSuccessCode.NOTIFICATION_READ_SUCCESS, null);
     }
 
-    @Operation(summary = "알림 전체 삭제", description = "사용자의 모든 알림 내역을 삭제합니다.")
+    @Operation(summary = "알림 전체 삭제 by 김승연(개발 완료)", description = "사용자의 모든 알림 내역을 삭제합니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",

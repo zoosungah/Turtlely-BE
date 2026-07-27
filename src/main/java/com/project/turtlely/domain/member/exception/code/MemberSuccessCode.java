@@ -27,7 +27,10 @@ public enum MemberSuccessCode implements BaseSuccessCode {
     LOGIN_SUCCESS(HttpStatus.OK, "MEMBER200_2", "로그인에 성공하였습니다."),
   
     // 토큰 재발급 관련 성공 코드
-    TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "MEMBER200_3", "토큰이 성공적으로 재발급되었습니다.");
+    TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "MEMBER200_3", "토큰이 성공적으로 재발급되었습니다."),
+
+    // FCM 관련 성공 코드
+    FCM_TOKEN_UPDATE_SUCCESS(HttpStatus.OK, "MEMBER200_7", "FCM 토큰이 성공적으로 등록/갱신되었습니다."),;
 
     private final HttpStatus status;
     private final String code;

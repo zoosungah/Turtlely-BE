@@ -39,6 +39,10 @@ coolsms:
 openai:
   secret-key: ${OPENAI_SECRET_KEY}
 
+# FCM 설정
+firebase:
+  service-account-json: ${FIREBASE_CONFIG:}
+
 # Youtube API 설정
 youtube:
   api:

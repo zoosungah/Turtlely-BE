@@ -1,10 +1,11 @@
 package com.project.turtlely.domain.member.controller;
 
 import com.project.turtlely.domain.member.dto.AccountResponseDTO;
-import com.project.turtlely.domain.member.dto.MemberRequestDTO;
+import com.project.turtlely.domain.member.dto.FcmTokenRequestDTO;
 import com.project.turtlely.domain.member.dto.SmsRequestDTO;
 import com.project.turtlely.domain.member.exception.code.MemberSuccessCode;
 import com.project.turtlely.domain.member.service.AccountService;
+import com.project.turtlely.domain.member.service.PrincipalDetails;
 import com.project.turtlely.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Tag(name = "사용자 계정 관리", description = "사용자 계정 관리 관련 API")
 @RestController
@@ -87,5 +89,20 @@ public class AccountController {
 
         accountService.findPwAndSendTemporaryPassword(request.getPhoneNumber());
         return ApiResponse.onSuccess(MemberSuccessCode.MEMBER_FIND_PW_SUCCESS, null);
+    }
+
+    @Operation(
+            summary = "FCM 기기 토큰 등록/갱신 API by 김승연(개발 완료)",
+            description = "클라이언트에서 발급받은 FCM 기기 토큰을 서버에 등록 및 갱신합니다."
+    )
+    @PostMapping("/fcm-token")
+    public ApiResponse<String> updateFcmToken(
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            @RequestBody @Valid FcmTokenRequestDTO requestDto) {
+
+        Long memberId = principalDetails.getMember().getMemberId();
+        accountService.updateFcmToken(memberId, requestDto.getFcmToken());
+
+        return ApiResponse.onSuccess(MemberSuccessCode.FCM_TOKEN_UPDATE_SUCCESS, "FCM 토큰이 성공적으로 등록되었습니다.");
     }
 }
