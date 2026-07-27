@@ -16,21 +16,6 @@ public enum NotificationErrorCode implements BaseErrorCode {
     private final String code;
     private final String message;
 
-    @Override
-    public HttpStatus getStatus() {
-        return status;
-    }
-
-    @Override
-    public String getCode() {
-        return code;
-    }
-
-    @Override
-    public String getMessage() {
-        return message;
-    }
-
     @Getter
     public static class NotificationCustomException extends RuntimeException {
         private final NotificationErrorCode errorCode;
