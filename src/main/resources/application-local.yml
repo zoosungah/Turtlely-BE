@@ -38,3 +38,6 @@ coolsms:
 # OpenAI 설정
 openai:
   secret-key: ${OPENAI_SECRET_KEY}
+
+firebase:
+  service-account-json: ${FIREBASE_CONFIG:}

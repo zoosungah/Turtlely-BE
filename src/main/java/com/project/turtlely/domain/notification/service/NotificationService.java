@@ -27,6 +27,7 @@ public class NotificationService {
 
     private final MemberRepository memberRepository;
     private final NotificationRepository notificationRepository;
+    private final FcmService fcmService; // 👈 FCM 서비스 주입
 
     public NotificationListDto getRecentNotifications(String loginId, Pageable pageable) {
         Member member = memberRepository.findByLoginId(loginId)
@@ -86,15 +87,24 @@ public class NotificationService {
         List<Member> allMembers = memberRepository.findAll();
 
         for (Member member : allMembers) {
+            String content = "가볍게 스트레칭하면서 긴장된 목을 풀어보세요";
+
             Notification notification = Notification.builder()
                     .member(member)
                     .type(NotificationType.DAILY)
-                    .content("가볍게 스트레칭하면서 긴장된 목을 풀어보세요")
+                    .content(content)
                     .status(NotificationStatus.SENT)
                     .sentAt(LocalDateTime.now())
                     .build();
 
             notificationRepository.save(notification);
+
+            // FCM 푸시 알림 같이 발송
+            fcmService.sendNotification(
+                    member.getFcmToken(),
+                    "일일 스트레칭 알림",
+                    content
+            );
         }
         notificationRepository.flush();
     }
@@ -115,6 +125,13 @@ public class NotificationService {
                     .build();
 
             notificationRepository.save(notification);
+
+            // FCM 푸시 알림 같이 발송
+            fcmService.sendNotification(
+                    member.getFcmToken(),
+                    "거북목 교정 알림",
+                    content
+            );
         }
         notificationRepository.flush();
     }

@@ -54,4 +54,11 @@ public class AccountService {
     private String generateTempPassword() {
         return UUID.randomUUID().toString().substring(0, 8);
     }
+
+    @Transactional
+    public void updateFcmToken(Long memberId, String fcmToken) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        member.updateFcmToken(fcmToken);
+    }
 }

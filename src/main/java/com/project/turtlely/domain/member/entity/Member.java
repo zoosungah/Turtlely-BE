@@ -75,4 +75,10 @@ public class Member extends BaseEntity {
     public void updateNickname(String newNickname) {
         this.nickname = newNickname;
     }
+
+    @Column(name = "fcm_token")
+    private String fcmToken;
+
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;}
 }
