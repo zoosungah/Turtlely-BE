@@ -64,6 +64,8 @@ dependencies {
 	// Firebase Admin SDK (FCM 푸시 알림)
 	implementation 'com.google.firebase:firebase-admin:9.2.0'
 
+	// Youtube
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 tasks.named('test') {
