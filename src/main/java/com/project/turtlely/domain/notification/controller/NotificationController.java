@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -105,5 +106,32 @@ public class NotificationController {
         notificationService.readNotification(notificationId, userDetails.getUsername());
 
         return ApiResponse.onSuccess(NotificationSuccessCode.NOTIFICATION_READ_SUCCESS, null);
+    }
+
+    @Operation(summary = "알림 전체 삭제", description = "사용자의 모든 알림 내역을 삭제합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "알림 전체 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"isSuccess\": true,\n" +
+                                            "  \"code\": \"NOTI_DELETE_200\",\n" +
+                                            "  \"message\": \"모든 알림 내역이 삭제되었습니다.\",\n" +
+                                            "  \"result\": null\n" +
+                                            "}"
+                            )
+                    )
+            )
+    })
+    @DeleteMapping
+    public ApiResponse<Void> deleteAllNotifications(@AuthenticationPrincipal UserDetails userDetails) {
+
+        notificationService.deleteAllNotifications(userDetails.getUsername());
+
+        return ApiResponse.onSuccess(NotificationSuccessCode.NOTIFICATION_DELETE_SUCCESS, null);
     }
 }

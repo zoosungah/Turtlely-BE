@@ -68,6 +68,19 @@ public class NotificationService {
         notification.markAsRead();
     }
 
+    // 알림 전체 삭제
+    @Transactional
+    public void deleteAllNotifications(String loginId) {
+        Member member = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
+
+        if (!notificationRepository.existsByMember(member)) {
+            throw new NotificationCustomException(NotificationErrorCode.ALARM_EMPTY);
+        }
+
+        notificationRepository.deleteAllByMember(member);
+    }
+
     @Transactional
     public void createDailyStretchingAlerts() {
         List<Member> allMembers = memberRepository.findAll();
