@@ -49,4 +49,43 @@ public class ExerciseResponseDTO {
         @JsonProperty("is_bookmarked")
         private Boolean isBookmarked;
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BookmarkListResponseDto {
+        @JsonProperty("bookmark_list")
+        private List<BookmarkVideoDto> bookmarkList;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BookmarkVideoDto {
+        @JsonProperty("video_id")
+        private Long videoId;
+
+        private String title;
+
+        @JsonProperty("youtube_video_key")
+        private String youtubeVideoKey;
+
+        @JsonProperty("thumbnail_url")
+        private String thumbnailUrl;
+
+        @JsonProperty("duration_minutes")
+        private Integer durationMinutes;
+
+        public static BookmarkVideoDto from(ExerciseVideo video) {
+            return BookmarkVideoDto.builder()
+                    .videoId(video.getVideoId())
+                    .title(video.getTitle())
+                    .youtubeVideoKey(video.getYoutubeVideoKey())
+                    .thumbnailUrl(video.getThumbnailUrl())
+                    .durationMinutes(video.getDurationMinutes())
+                    .build();
+        }
+    }
 }

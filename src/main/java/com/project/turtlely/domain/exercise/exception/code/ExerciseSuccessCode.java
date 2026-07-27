@@ -15,7 +15,8 @@ public enum ExerciseSuccessCode implements BaseSuccessCode {
     // 운동존 관련 성공 코드
     EXERCISE_LIST_GET_SUCCESS(HttpStatus.OK, "EXERCISE200_1", "운동존 목록 조회에 성공하였습니다."),
     INIT_VIDEOS_SUCCESS(HttpStatus.OK, "EXERCISE200_2", "초기 운동 영상 수집에 성공하였습니다."),
-    BOOKMARK_SUCCESS(HttpStatus.OK, "BOOKMARK_SUCCESS", "북마크 상태가 변경되었습니다.");
+    BOOKMARK_SUCCESS(HttpStatus.OK, "BOOKMARK_SUCCESS", "북마크 상태가 변경되었습니다."),
+    BOOKMARK_LIST_GET_SUCCESS(HttpStatus.OK, "BOOKMARK_LIST_200", "내가 북마크한 영상 목록 조회가 완료되었습니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -63,7 +63,7 @@ public class ExerciseService {
                 .build();
     }
 
-    // 영상 북마크 기능
+    // 영상 북마크
     @Transactional
     public ExerciseResponseDTO.ExerciseBookmarkDto toggleBookmark(Long videoId, Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -90,6 +90,22 @@ public class ExerciseService {
 
         return ExerciseResponseDTO.ExerciseBookmarkDto.builder()
                 .isBookmarked(isBookmarked)
+                .build();
+    }
+
+    // 내가 북마크한 영상 목록 조회
+    public ExerciseResponseDTO.BookmarkListResponseDto getBookmarkedVideos(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        List<VideoBookmark> bookmarks = videoBookmarkRepository.findAllByMember(member);
+
+        List<ExerciseResponseDTO.BookmarkVideoDto> bookmarkVideoDtos = bookmarks.stream()
+                .map(bookmark -> ExerciseResponseDTO.BookmarkVideoDto.from(bookmark.getExerciseVideo()))
+                .toList();
+
+        return ExerciseResponseDTO.BookmarkListResponseDto.builder()
+                .bookmarkList(bookmarkVideoDtos)
                 .build();
     }
 }
