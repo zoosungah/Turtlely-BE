@@ -9,24 +9,11 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum NotificationSuccessCode implements BaseSuccessCode {
 
-    NOTIFICATION_GET_SUCCESS(HttpStatus.OK, "NOTI200_1", "최근 7일간의 알림 목록 조회가 완료되었습니다.");
+    NOTIFICATION_GET_SUCCESS(HttpStatus.OK, "NOTI200_1", "최근 7일간의 알림 목록 조회가 완료되었습니다."),
+    NOTIFICATION_READ_SUCCESS(HttpStatus.OK, "NOTI200_2", "알림 읽음 처리가 완료되었습니다."),
+    NOTIFICATION_DELETE_SUCCESS(HttpStatus.OK, "NOTI_DELETE_200", "모든 알림 내역이 삭제되었습니다.");
 
-    private final HttpStatus httpStatus;
+    private final HttpStatus status;
     private final String code;
     private final String message;
-
-    @Override
-    public HttpStatus getStatus() {
-        return httpStatus;
-    }
-
-    @Override
-    public String getCode() {
-        return code;
-    }
-
-    @Override
-    public String getMessage() {
-        return message;
-    }
 }

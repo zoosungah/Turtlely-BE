@@ -15,7 +15,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,7 +42,7 @@ public class NotificationController {
                             examples = @ExampleObject(
                                     value = "{\n" +
                                             "  \"isSuccess\": true,\n" +
-                                            "  \"code\": \"NOTI_GET_200\",\n" +
+                                            "  \"code\": \"NOTI200_1\",\n" +
                                             "  \"message\": \"최근 7일간의 알림 목록 조회가 완료되었습니다.\",\n" +
                                             "  \"result\": {\n" +
                                             "    \"notification_list\": [\n" +
@@ -74,5 +77,61 @@ public class NotificationController {
         NotificationListDto result = notificationService.getRecentNotifications(userDetails.getUsername(), pageable);
 
         return ApiResponse.onSuccess(NotificationSuccessCode.NOTIFICATION_GET_SUCCESS, result);
+    }
+
+    @Operation(summary = "알림 읽음 처리", description = "특정 알림을 읽음 상태(isRead=true)로 변경합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "알림 읽음 처리 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"isSuccess\": true,\n" +
+                                            "  \"code\": \"NOTI200_2\",\n" +
+                                            "  \"message\": \"알림 읽음 처리가 완료되었습니다.\",\n" +
+                                            "  \"result\": null\n" +
+                                            "}"
+                            )
+                    )
+            )
+    })
+    @PatchMapping("/{notificationId}/read")
+    public ApiResponse<Void> markNotificationAsRead(
+            @PathVariable Long notificationId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        notificationService.readNotification(notificationId, userDetails.getUsername());
+
+        return ApiResponse.onSuccess(NotificationSuccessCode.NOTIFICATION_READ_SUCCESS, null);
+    }
+
+    @Operation(summary = "알림 전체 삭제", description = "사용자의 모든 알림 내역을 삭제합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "알림 전체 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"isSuccess\": true,\n" +
+                                            "  \"code\": \"NOTI_DELETE_200\",\n" +
+                                            "  \"message\": \"모든 알림 내역이 삭제되었습니다.\",\n" +
+                                            "  \"result\": null\n" +
+                                            "}"
+                            )
+                    )
+            )
+    })
+    @DeleteMapping
+    public ApiResponse<Void> deleteAllNotifications(@AuthenticationPrincipal UserDetails userDetails) {
+
+        notificationService.deleteAllNotifications(userDetails.getUsername());
+
+        return ApiResponse.onSuccess(NotificationSuccessCode.NOTIFICATION_DELETE_SUCCESS, null);
     }
 }
