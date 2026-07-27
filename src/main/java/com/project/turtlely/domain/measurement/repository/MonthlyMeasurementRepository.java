@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,4 +34,6 @@ public interface MonthlyMeasurementRepository extends JpaRepository<MonthlyMeasu
             "AND m.measuredAt <= :targetDate")
     List<Member> findMembersToNotify(@Param("targetDate") java.time.LocalDateTime targetDate);
 
+    // 오늘 측정 기록이 있는지 체크
+    boolean existsByMemberAndMeasuredAtBetween(Member member, LocalDateTime start, LocalDateTime end);
 }

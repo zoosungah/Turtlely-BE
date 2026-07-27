@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 @Configuration
 public class FirebaseConfig {
 
-    @Value("${firebase.service-account-json}")
+    @Value("${firebase.service-account-json:}")
     private String firebaseConfigJson;
 
     @PostConstruct
@@ -27,8 +27,11 @@ public class FirebaseConfig {
                 return;
             }
 
+            // 환경 변수 주입 시 발생할 수 있는 \n 따옴표/역슬래시 줄바꿈 이슈 보정
+            String formattedJson = firebaseConfigJson.replace("\\n", "\n");
+
             InputStream serviceAccount = new ByteArrayInputStream(
-                    firebaseConfigJson.getBytes(StandardCharsets.UTF_8)
+                    formattedJson.getBytes(StandardCharsets.UTF_8)
             );
 
             FirebaseOptions options = FirebaseOptions.builder()
@@ -40,7 +43,7 @@ public class FirebaseConfig {
                 log.info("Firebase Application이 성공적으로 초기화되었습니다.");
             }
         } catch (Exception e) {
-            log.error("Firebase 초기화 중 에러 발생: {}", e.getMessage());
+            log.error("Firebase 초기화 중 에러 발생: ", e); // e.getMessage() 대신 e 전체를 출력하여 원인 파악
         }
     }
 }

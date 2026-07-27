@@ -1,5 +1,7 @@
 package com.project.turtlely.domain.notification.service;
 
+import com.project.turtlely.domain.daily.repository.DailyReportRepository;
+import com.project.turtlely.domain.measurement.repository.MonthlyMeasurementRepository;
 import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.domain.member.repository.MemberRepository;
 import com.project.turtlely.domain.notification.dto.NotificationResponse.NotificationDto;
@@ -16,7 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +32,8 @@ public class NotificationService {
     private final MemberRepository memberRepository;
     private final NotificationRepository notificationRepository;
     private final FcmService fcmService; // 👈 FCM 서비스 주입
+    private final DailyReportRepository dailyReportRepository;
+    private final MonthlyMeasurementRepository monthlyMeasurementRepository;
 
     public NotificationListDto getRecentNotifications(String loginId, Pageable pageable) {
         Member member = memberRepository.findByLoginId(loginId)
@@ -85,8 +91,21 @@ public class NotificationService {
     @Transactional
     public void createDailyStretchingAlerts() {
         List<Member> allMembers = memberRepository.findAll();
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfToday = today.atStartOfDay();
+        LocalDateTime endOfToday = today.atTime(LocalTime.MAX);
 
         for (Member member : allMembers) {
+            // 오늘 일일 측정 기록 또는 월간 측정 기록이 존재하는지 체크
+            boolean isDailyReported = dailyReportRepository.existsByMemberIdAndReportDate(member.getMemberId(), today);
+            boolean isMonthlyMeasuredToday = monthlyMeasurementRepository
+                    .existsByMemberAndMeasuredAtBetween(member, startOfToday, endOfToday);
+
+            // 오늘 이미 측정을 진행했거나 완료한 유저는 알림 스킵
+            if (isDailyReported || isMonthlyMeasuredToday) {
+                continue;
+            }
+
             String content = "가볍게 스트레칭하면서 긴장된 목을 풀어보세요";
 
             Notification notification = Notification.builder()
@@ -112,8 +131,21 @@ public class NotificationService {
     @Transactional
     public void createTurtleneckCorrectionAlerts() {
         List<Member> allMembers = memberRepository.findAll();
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfToday = today.atStartOfDay();
+        LocalDateTime endOfToday = today.atTime(LocalTime.MAX);
 
         for (Member member : allMembers) {
+            // 오늘 일일 측정 기록 또는 월간 측정 기록이 존재하는지 체크
+            boolean isDailyReported = dailyReportRepository.existsByMemberIdAndReportDate(member.getMemberId(), today);
+            boolean isMonthlyMeasuredToday = monthlyMeasurementRepository
+                    .existsByMemberAndMeasuredAtBetween(member, startOfToday, endOfToday);
+
+            // 오늘 이미 측정을 진행했거나 완료한 유저는 알림 스킵
+            if (isDailyReported || isMonthlyMeasuredToday) {
+                continue;
+            }
+
             String content = member.getNickname() + "님 작업 중이신가요? 거북목을 교정할 시간이에요";
 
             Notification notification = Notification.builder()
