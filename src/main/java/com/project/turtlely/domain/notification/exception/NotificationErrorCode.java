@@ -10,7 +10,8 @@ import org.springframework.http.HttpStatus;
 public enum NotificationErrorCode implements BaseErrorCode {
 
     AUTH_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "NOTI401_1", "유효하지 않거나 만료된 인증 토큰입니다."),
-    ALARM_EMPTY(HttpStatus.NOT_FOUND, "NOTI404_1", "최근 7일 이내에 수신된 알림이 없습니다.");
+    ALARM_EMPTY(HttpStatus.NOT_FOUND, "NOTI404_1", "최근 7일 이내에 수신된 알림이 없습니다."),
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTI404_2", "해당 알림을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -9,7 +9,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum NotificationSuccessCode implements BaseSuccessCode {
 
-    NOTIFICATION_GET_SUCCESS(HttpStatus.OK, "NOTI200_1", "최근 7일간의 알림 목록 조회가 완료되었습니다.");
+    NOTIFICATION_GET_SUCCESS(HttpStatus.OK, "NOTI200_1", "최근 7일간의 알림 목록 조회가 완료되었습니다."),
+    NOTIFICATION_READ_SUCCESS(HttpStatus.OK, "NOTI200_2", "알림 읽음 처리가 완료되었습니다.");
 
     private final HttpStatus status;
     private final String code;

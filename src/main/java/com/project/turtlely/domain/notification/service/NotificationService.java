@@ -46,7 +46,7 @@ public class NotificationService {
                         .notificationId(n.getNotificationId())
                         .type(n.getType())
                         .content(n.getContent())
-                        .isRead(false)
+                        .isRead(n.isRead())
                         .createdAt(n.getSentAt())
                         .build())
                 .collect(Collectors.toList());
@@ -54,6 +54,18 @@ public class NotificationService {
         return NotificationListDto.builder()
                 .notificationList(dtoList)
                 .build();
+    }
+
+    // 알림 읽음 처리 메서드
+    @Transactional
+    public void readNotification(Long notificationId, String loginId) {
+        Member member = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
+
+        Notification notification = notificationRepository.findByNotificationIdAndMember(notificationId, member)
+                .orElseThrow(() -> new NotificationCustomException(NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+
+        notification.markAsRead();
     }
 
     @Transactional

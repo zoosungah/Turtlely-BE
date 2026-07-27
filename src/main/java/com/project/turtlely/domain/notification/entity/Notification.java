@@ -6,9 +6,9 @@ import com.project.turtlely.domain.notification.enums.NotificationType;
 import com.project.turtlely.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Builder;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Notification extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long notificationId;
@@ -39,4 +40,15 @@ public class Notification extends BaseEntity {
     private LocalDateTime sentAt;
     private LocalDateTime readAt;
     private LocalDateTime deletedAt;
+
+    // 알림 읽음 처리
+    public void markAsRead() {
+        this.status = NotificationStatus.READ;
+        this.readAt = LocalDateTime.now();
+    }
+
+    // 읽음 여부 확인
+    public boolean isRead() {
+        return this.status == NotificationStatus.READ || this.readAt != null;
+    }
 }
