@@ -14,9 +14,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -42,9 +44,14 @@ public class ExerciseService {
                 postureType, category, durationMinutes, keyword
         );
 
-        // 3. 필터 선택 없는 기본 메인 진입 시 무작위(랜덤)로 순서 섞어주기
+        // 3. 필터 선택 없는 기본 메인 진입 시 '하루 단위'로 동일한 무작위 순서 유지
         if (postureType == null && category == null && durationMinutes == null && keyword == null) {
-            Collections.shuffle(videos);
+            // 오늘 날짜(예: 20260728)를 숫자 Seed 값으로 사용
+            long dailySeed = LocalDate.now().toEpochDay();
+            Random dailyRandom = new Random(dailySeed);
+
+            // 날짜 기반 Random 객체를 이용하여 셔플 (하루 동안은 순서 고정)
+            Collections.shuffle(videos, dailyRandom);
         }
 
         // 4. 북마크 여부 체크 및 DTO 변환
