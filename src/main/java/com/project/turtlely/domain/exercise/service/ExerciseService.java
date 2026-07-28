@@ -52,7 +52,7 @@ public class ExerciseService {
                 .map(video -> {
                     // ✅ 북마크 테이블이 있다면 아래처럼 확인 (임시는 false 처리)
                     // boolean isBookmarked = exerciseBookmarkRepository.existsByMemberAndExerciseVideo(member, video);
-                    boolean isBookmarked = false;
+                    boolean isBookmarked = videoBookmarkRepository.existsByMemberAndExerciseVideo(member, video);
                     return ExerciseResponseDTO.ExerciseVideoDto.of(video, isBookmarked);
                 })
                 .toList();
@@ -101,7 +101,7 @@ public class ExerciseService {
         List<VideoBookmark> bookmarks = videoBookmarkRepository.findAllByMember(member);
 
         List<ExerciseResponseDTO.BookmarkVideoDto> bookmarkVideoDtos = bookmarks.stream()
-                .map(bookmark -> ExerciseResponseDTO.BookmarkVideoDto.from(bookmark.getExerciseVideo()))
+                .map(bookmark -> ExerciseResponseDTO.BookmarkVideoDto.from(bookmark))
                 .toList();
 
         return ExerciseResponseDTO.BookmarkListResponseDto.builder()

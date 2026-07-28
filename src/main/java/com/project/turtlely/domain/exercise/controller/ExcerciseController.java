@@ -28,12 +28,12 @@ public class ExcerciseController {
             summary = "운동존 영상 목록 및 필터링 조회 API by 주성아(개발 완료)",
             description =
                     "- 메인 운동존 화면 및 필터 선택 시 사용되는 영상 목록 조회 API입니다.\n" +
-                    "- **모든 필터는 선택 사항(Optional)**이며, 전달하지 않을 경우 전체 영상 목록이 무작위 순서로 반환됩니다.\n" +
-                    "### 필터링 조건 \n" +
-                    "1. **postureType**: 자세 유형 (`TURTLE_NECK`, `STRAIGHT_NECK`, `REVERSE_C`, `ALL`)\n" +
-                    "2. **category**: 운동 종류 (`STRETCHING`, `PHYSICAL_THERAPY`, `FITNESS`, `ETC`, `ALL`)\n" +
-                    "3. **durationMinutes**: 최대 영상 시간 (예: `15` 선택 시 15분 이하 영상만 필터링)\n" +
-                    "4. **keyword**: 제목 검색어 (대소문자 구분 없음, 부분 일치 검색)\n\n"
+                            "- **모든 필터는 선택 사항(Optional)**이며, 전달하지 않을 경우 전체 영상 목록이 무작위 순서로 반환됩니다.\n" +
+                            "### 필터링 조건 \n" +
+                            "1. **postureType**: 자세 유형 (`TURTLE_NECK`, `STRAIGHT_NECK`, `REVERSE_C`, `ALL`)\n" +
+                            "2. **category**: 운동 종류 (`STRETCHING`, `PHYSICAL_THERAPY`, `FITNESS`, `ETC`, `ALL`)\n" +
+                            "3. **durationMinutes**: 최대 영상 시간 (예: `15` 선택 시 15분 이하 영상만 필터링)\n" +
+                            "4. **keyword**: 제목 검색어 (대소문자 구분 없음, 부분 일치 검색)\n\n"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -126,7 +126,8 @@ public class ExcerciseController {
                                             "        \"title\": \"일자목 교정 스트레칭\",\n" +
                                             "        \"youtube_video_key\": \"vX2c7XbZ\",\n" +
                                             "        \"thumbnail_url\": \"https://...\",\n" +
-                                            "        \"duration_minutes\": 5\n" +
+                                            "        \"duration_minutes\": 5,\n" +
+                                            "        \"bookmarked_at\": \"2026-07-28\"\n" +
                                             "      }\n" +
                                             "    ]\n" +
                                             "  }\n" +
