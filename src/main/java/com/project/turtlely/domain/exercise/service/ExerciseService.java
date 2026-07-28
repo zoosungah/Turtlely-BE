@@ -101,7 +101,7 @@ public class ExerciseService {
         List<VideoBookmark> bookmarks = videoBookmarkRepository.findAllByMember(member);
 
         List<ExerciseResponseDTO.BookmarkVideoDto> bookmarkVideoDtos = bookmarks.stream()
-                .map(bookmark -> ExerciseResponseDTO.BookmarkVideoDto.from(bookmark.getExerciseVideo()))
+                .map(bookmark -> ExerciseResponseDTO.BookmarkVideoDto.from(bookmark))
                 .toList();
 
         return ExerciseResponseDTO.BookmarkListResponseDto.builder()

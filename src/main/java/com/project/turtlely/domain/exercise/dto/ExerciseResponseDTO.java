@@ -1,6 +1,7 @@
 package com.project.turtlely.domain.exercise.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.turtlely.domain.exercise.entity.ExerciseVideo;
+import com.project.turtlely.domain.exercise.entity.VideoBookmark;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -79,6 +80,25 @@ public class ExerciseResponseDTO {
 
         @JsonProperty("duration_minutes")
         private Integer durationMinutes;
+
+        @JsonProperty("bookmarked_at")
+        private String bookmarkedAt;
+
+        public static BookmarkVideoDto from(VideoBookmark bookmark) {
+            ExerciseVideo video = bookmark.getExerciseVideo();
+            String formattedDate = bookmark.getCreatedAt() != null
+                    ? bookmark.getCreatedAt().toLocalDate().toString()
+                    : null;
+
+            return BookmarkVideoDto.builder()
+                    .videoId(video.getVideoId())
+                    .title(video.getTitle())
+                    .youtubeVideoKey(video.getYoutubeVideoKey())
+                    .thumbnailUrl(video.getThumbnailUrl())
+                    .durationMinutes(video.getDurationMinutes())
+                    .bookmarkedAt(formattedDate)
+                    .build();
+        }
 
         public static BookmarkVideoDto from(ExerciseVideo video) {
             return BookmarkVideoDto.builder()
