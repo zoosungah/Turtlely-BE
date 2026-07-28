@@ -88,24 +88,12 @@ public class NotificationService {
         notificationRepository.deleteAllByMember(member);
     }
 
+    // 1. 스트레칭 알림: 측정 여부와 상관없이 모든 회원에게 발송
     @Transactional
     public void createDailyStretchingAlerts() {
         List<Member> allMembers = memberRepository.findAll();
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfToday = today.atStartOfDay();
-        LocalDateTime endOfToday = today.atTime(LocalTime.MAX);
 
         for (Member member : allMembers) {
-            // 오늘 일일 측정 기록 또는 월간 측정 기록이 존재하는지 체크
-            boolean isDailyReported = dailyReportRepository.existsByMemberIdAndReportDate(member.getMemberId(), today);
-            boolean isMonthlyMeasuredToday = monthlyMeasurementRepository
-                    .existsByMemberAndMeasuredAtBetween(member, startOfToday, endOfToday);
-
-            // 오늘 이미 측정을 진행했거나 완료한 유저는 알림 스킵
-            if (isDailyReported || isMonthlyMeasuredToday) {
-                continue;
-            }
-
             String content = "가볍게 스트레칭하면서 긴장된 목을 풀어보세요";
 
             Notification notification = Notification.builder()
@@ -128,6 +116,7 @@ public class NotificationService {
         notificationRepository.flush();
     }
 
+    // 2. 거북목 교정 알림: 오늘 측정 기록이 있는 회원은 스킵하고 미측정 회원에게만 발송
     @Transactional
     public void createTurtleneckCorrectionAlerts() {
         List<Member> allMembers = memberRepository.findAll();
