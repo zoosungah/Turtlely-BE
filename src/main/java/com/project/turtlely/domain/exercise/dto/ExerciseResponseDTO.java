@@ -27,6 +27,8 @@ public class ExerciseResponseDTO {
         private String title;
         private String thumbnailUrl;
         private Integer durationMinutes;
+
+        @JsonProperty("is_bookmarked")
         private Boolean isBookmarked;
 
         public static ExerciseVideoDto of(ExerciseVideo video, boolean isBookmarked) {
