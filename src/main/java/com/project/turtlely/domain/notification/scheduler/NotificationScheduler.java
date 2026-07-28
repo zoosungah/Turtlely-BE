@@ -17,8 +17,8 @@ public class NotificationScheduler {
         notificationService.createDailyStretchingAlerts();
     }
 
-    // 매일 오후 2시 거북목 교정 알림 생성
-    @Scheduled(cron = "0 0 14 * * *")
+    // 매일 오전 10시 거북목 교정 알림 생성
+    @Scheduled(cron = "0 0 10 * * *")
     public void sendTurtleneckCorrectionAlarm() {
         notificationService.createTurtleneckCorrectionAlerts();}
 }
