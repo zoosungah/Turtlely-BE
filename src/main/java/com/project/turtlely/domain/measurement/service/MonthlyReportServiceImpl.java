@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -348,10 +349,22 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         // 오늘 날짜 기준 30일 전 계산
         LocalDateTime targetDate = LocalDateTime.now().minusDays(30);
 
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
+
         // 마지막 측정일 기준 30일이 경과한 타겟 회원 추출
         List<Member> targetMembers = measurementRepository.findMembersToNotify(targetDate);
 
         for (Member member : targetMembers) {
+            boolean alreadyNotifiedToday = notificationRepository.existsByMemberAndTypeAndSentAtAfter(
+                    member,
+                    com.project.turtlely.domain.notification.enums.NotificationType.MONTHLY,
+                    startOfToday
+            );
+
+            if (alreadyNotifiedToday) {
+                continue;
+            }
+
             com.project.turtlely.domain.notification.entity.Notification notification =
                     com.project.turtlely.domain.notification.entity.Notification.builder()
                             .member(member)
