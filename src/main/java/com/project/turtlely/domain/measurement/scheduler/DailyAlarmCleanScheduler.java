@@ -11,9 +11,9 @@ public class DailyAlarmCleanScheduler {
 
     private final MonthlyReportService monthlyReportService;
 
-    @Scheduled(cron = "0 0 2 * * *")
+    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
     public void cleanExpiredAlarmsDaily() {
         monthlyReportService.expireExpiredAlarms();
-        monthlyReportService.createMonthlyMeasurementAlerts(); //측정 30일 지났을 때 알림 생성
+        monthlyReportService.createMonthlyMeasurementAlerts(); // 측정 30일 지났을 때 알림 생성
     }
 }
