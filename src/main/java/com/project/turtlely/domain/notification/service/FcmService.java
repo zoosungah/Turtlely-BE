@@ -25,6 +25,8 @@ public class FcmService {
             AndroidConfig androidConfig = AndroidConfig.builder()
                     .setNotification(AndroidNotification.builder()
                             .setTag(notificationTag)
+                            .setChannelId("high_importance_channel") // 프론트엔드와 맞춘 안드로이드 알림 채널 ID
+                            .setPriority(AndroidNotification.Priority.HIGH) // 상단 배너 알림 노출을 위한 우선순위 설정
                             .build())
                     .build();
 
