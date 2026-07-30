@@ -30,8 +30,15 @@ public class FcmService {
                             .build())
                     .build();
 
+            // 1. APNs 기본 설정을 위한 Aps 객체 추가
+            Aps aps = Aps.builder()
+                    .setSound("default")
+                    .build();
+
+            // 2. setAps(aps)를 명시적으로 주입
             ApnsConfig apnsConfig = ApnsConfig.builder()
                     .putHeader("apns-collapse-id", notificationTag)
+                    .setAps(aps) // <- 필수 지정
                     .build();
 
             Message message = Message.builder()
