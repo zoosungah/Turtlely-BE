@@ -23,6 +23,7 @@ public class FcmService {
             String notificationTag = UUID.randomUUID().toString();
 
             AndroidConfig androidConfig = AndroidConfig.builder()
+                    .setPriority(AndroidConfig.Priority.HIGH) // 도즈 모드 지연 방지를 위한 전송 우선순위 설정
                     .setNotification(AndroidNotification.builder()
                             .setTag(notificationTag)
                             .setChannelId("high_importance_channel") // 프론트엔드와 맞춘 안드로이드 알림 채널 ID
