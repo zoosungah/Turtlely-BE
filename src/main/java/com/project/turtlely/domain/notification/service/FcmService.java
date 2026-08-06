@@ -39,6 +39,7 @@ public class FcmService {
             // 2. setAps(aps)를 명시적으로 주입
             ApnsConfig apnsConfig = ApnsConfig.builder()
                     .putHeader("apns-collapse-id", notificationTag)
+                    .putHeader("apns-priority", "10") // iOS 즉시 전송 우선순위 설정 (10: 즉시 전송)
                     .setAps(aps) // <- 필수 지정
                     .build();
 
