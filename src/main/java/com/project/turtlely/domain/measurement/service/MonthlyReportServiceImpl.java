@@ -10,6 +10,7 @@ import com.project.turtlely.domain.measurement.exception.MeasurementErrorCode.Me
 import com.project.turtlely.domain.measurement.repository.MonthlyMeasurementRepository;
 import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.domain.member.repository.MemberRepository;
+import com.project.turtlely.domain.notification.service.FcmService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     private final VideoLogRepository videoLogRepository;
     private final GptService gptService;
     private final com.project.turtlely.domain.notification.repository.NotificationRepository notificationRepository;
+    private final FcmService fcmService;
 
     private final MonthlyHWService monthlyHWService;
 
@@ -375,6 +377,15 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                             .build();
 
             notificationRepository.save(notification);
+
+            // FCM 실제 푸시 알림 전송 호출
+            if (member.getFcmToken() != null && !member.getFcmToken().isBlank()) {
+                fcmService.sendNotification(
+                        member.getFcmToken(),
+                        "월간 거북목 측정 알림",
+                        "이번 달 월간 거북목 측정을 할 시기가 되었어요!"
+                );
+            }
         }
         notificationRepository.flush();
     }
