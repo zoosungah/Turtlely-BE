@@ -12,6 +12,7 @@ import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.domain.member.repository.MemberRepository;
 import com.project.turtlely.domain.notification.service.FcmService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -356,7 +358,11 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         // 마지막 측정일 기준 30일이 경과한 타겟 회원 추출
         List<Member> targetMembers = measurementRepository.findMembersToNotify(targetDate);
 
-        for (Member member : targetMembers) {
+        for (Member targetMember : targetMembers) {
+            // memberRepository를 통해 FCM 토큰을 포함한 최신 Member 엔티티를 영속화하여 재조회
+            Member member = memberRepository.findById(targetMember.getMemberId())
+                    .orElse(targetMember);
+
             boolean alreadyNotifiedToday = notificationRepository.existsByMemberAndTypeAndSentAtAfter(
                     member,
                     com.project.turtlely.domain.notification.enums.NotificationType.MONTHLY,
@@ -377,6 +383,9 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                             .build();
 
             notificationRepository.save(notification);
+
+            // FCM 전송 호출 바로 직전에 로그 추가
+            log.info("★ 월간 알림 FCM 발송 시도 - Member ID: {}, Token: {}", member.getMemberId(), member.getFcmToken());
 
             // FCM 실제 푸시 알림 전송 호출
             if (member.getFcmToken() != null && !member.getFcmToken().isBlank()) {
