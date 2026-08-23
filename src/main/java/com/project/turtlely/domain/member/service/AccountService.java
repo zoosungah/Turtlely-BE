@@ -57,8 +57,14 @@ public class AccountService {
 
     @Transactional
     public void updateFcmToken(Long memberId, String fcmToken) {
+        // 1. 다른 계정에 이미 등록된 동일한 FCM 토큰을 null로 초기화
+        if (fcmToken != null && !fcmToken.isBlank()) {
+            memberRepository.clearExistingFcmToken(fcmToken);
+        }
+
+        // 2. 현재 로그인한 회원 엔티티 조회 및 FCM 토큰 갱신
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
         member.updateFcmToken(fcmToken);
     }
 }

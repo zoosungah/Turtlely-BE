@@ -2,6 +2,9 @@ package com.project.turtlely.domain.member.repository;
 
 import com.project.turtlely.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,7 +15,7 @@ import java.time.LocalDateTime;
 public interface MemberRepository extends JpaRepository<Member, Long> {
     // 일반 회원가입 시 ID 중복 확인
     boolean existsByLoginId(String loginId);
-  
+
     //아이디로 회원정보 통째로 가져오기
     Optional<Member> findByLoginId(String loginId);
 
@@ -33,5 +36,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 닉네임 중복 확인
     boolean existsByNickname(String nickname);
+
+    // 동일한 FCM 토큰을 보유한 기존 사용자의 토큰을 null로 초기화
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Member m SET m.fcmToken = null WHERE m.fcmToken = :fcmToken")
+    void clearExistingFcmToken(@Param("fcmToken") String fcmToken);
 
 }
