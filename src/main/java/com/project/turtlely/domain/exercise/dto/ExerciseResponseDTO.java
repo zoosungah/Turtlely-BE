@@ -2,11 +2,13 @@ package com.project.turtlely.domain.exercise.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.turtlely.domain.exercise.entity.ExerciseVideo;
 import com.project.turtlely.domain.exercise.entity.VideoBookmark;
+import com.project.turtlely.domain.exercise.entity.VideoLog;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 public class ExerciseResponseDTO {
     @Getter
@@ -107,6 +109,29 @@ public class ExerciseResponseDTO {
                     .youtubeVideoKey(video.getYoutubeVideoKey())
                     .thumbnailUrl(video.getThumbnailUrl())
                     .durationMinutes(video.getDurationMinutes())
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VideoLogResponseDto {
+        @JsonProperty("history_id")
+        private Long historyId;
+
+        @JsonProperty("video_id")
+        private Long videoId;
+
+        @JsonProperty("watched_at")
+        private LocalDateTime watchedAt;
+
+        public static VideoLogResponseDto from(VideoLog videoLog) {
+            return VideoLogResponseDto.builder()
+                    .historyId(videoLog.getVideoLogId())
+                    .videoId(videoLog.getVideoId())
+                    .watchedAt(videoLog.getWatchedAt())
                     .build();
         }
     }
