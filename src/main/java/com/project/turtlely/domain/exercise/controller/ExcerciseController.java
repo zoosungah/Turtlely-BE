@@ -145,4 +145,51 @@ public class ExcerciseController {
 
         return ApiResponse.onSuccess(ExerciseSuccessCode.BOOKMARK_LIST_GET_SUCCESS, result);
     }
+
+    @Operation(
+            summary = "영상 시청 기록 저장 API by 김승연(개발 완료)",
+            description = "사용자가 운동 영상을 시청할 때 시청 이력을 저장합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "EX_HISTORY_200",
+                    description = "영상 시청 기록 저장 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"isSuccess\": true,\n" +
+                                            "  \"code\": \"EX_HISTORY_200\",\n" +
+                                            "  \"message\": \"영상 시청 기록이 성공적으로 저장되었습니다.\",\n" +
+                                            "  \"result\": {\n" +
+                                            "    \"history_id\": 1,\n" +
+                                            "    \"video_id\": 101,\n" +
+                                            "    \"watched_at\": \"2026-08-28T21:45:00\"\n" +
+                                            "  }\n" +
+                                            "}"
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "요청 ID에 해당하는 운동 영상 존재X",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "COMMON401",
+                    description = "인증 실패 (JWT 토큰 누락 또는 만료)",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @PostMapping("/{video_id}/history")
+    public ApiResponse<ExerciseResponseDTO.VideoLogResponseDto> recordVideoWatch(
+            @PathVariable("video_id") Long videoId,
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+
+        Long memberId = principalDetails.getMember().getMemberId();
+        ExerciseResponseDTO.VideoLogResponseDto result = exerciseService.recordVideoWatch(videoId, memberId);
+
+        return ApiResponse.onSuccess(ExerciseSuccessCode.VIDEO_WATCH_LOG_SUCCESS, result);
+    }
 }

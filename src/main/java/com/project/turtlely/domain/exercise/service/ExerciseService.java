@@ -2,12 +2,14 @@ package com.project.turtlely.domain.exercise.service;
 import com.project.turtlely.domain.exercise.dto.ExerciseResponseDTO;
 import com.project.turtlely.domain.exercise.entity.ExerciseVideo;
 import com.project.turtlely.domain.exercise.entity.VideoBookmark;
+import com.project.turtlely.domain.exercise.entity.VideoLog;
 import com.project.turtlely.domain.exercise.enums.ExerciseCategory;
 import com.project.turtlely.domain.exercise.enums.PostureType;
 import com.project.turtlely.domain.exercise.exception.ExcerciseException;
 import com.project.turtlely.domain.exercise.exception.code.ExerciseErrorCode;
 import com.project.turtlely.domain.exercise.repository.ExerciseVideoRepository;
 import com.project.turtlely.domain.exercise.repository.VideoBookmarkRepository;
+import com.project.turtlely.domain.exercise.repository.VideoLogRepository;
 import com.project.turtlely.domain.member.entity.Member;
 import com.project.turtlely.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class ExerciseService {
     private final ExerciseVideoRepository exerciseVideoRepository;
     private final MemberRepository memberRepository;
     private final VideoBookmarkRepository videoBookmarkRepository;
+    private final VideoLogRepository videoLogRepository;
 
     public ExerciseResponseDTO.ExerciseVideoListDto getExerciseVideos(
             Long memberId,
@@ -114,5 +117,25 @@ public class ExerciseService {
         return ExerciseResponseDTO.BookmarkListResponseDto.builder()
                 .bookmarkList(bookmarkVideoDtos)
                 .build();
+    }
+
+    // 영상 시청 기록 저장
+    @Transactional
+    public ExerciseResponseDTO.VideoLogResponseDto recordVideoWatch(Long videoId, Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        ExerciseVideo video = exerciseVideoRepository.findById(videoId)
+                .orElseThrow(() -> new ExcerciseException(ExerciseErrorCode.VIDEO_NOT_FOUND));
+
+        VideoLog videoLog = VideoLog.builder()
+                .memberId(member.getMemberId())
+                .videoId(video.getVideoId())
+                .watchTime(video.getDurationMinutes())
+                .build();
+
+        VideoLog savedLog = videoLogRepository.save(videoLog);
+
+        return ExerciseResponseDTO.VideoLogResponseDto.from(savedLog);
     }
 }
