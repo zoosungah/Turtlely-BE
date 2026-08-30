@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -137,5 +139,102 @@ public class ExerciseService {
         VideoLog savedLog = videoLogRepository.save(videoLog);
 
         return ExerciseResponseDTO.VideoLogResponseDto.from(savedLog);
+    }
+
+    // 운동 가이드 월별 이용 통계 및 맞춤 영상 조회
+    public ExerciseResponseDTO.MonthlyStatsResponseDto getMonthlyExerciseStats(Long memberId, int year, int month) {
+        // 연도 및 월 파라미터 유효성 검증
+        if (year < 2000 || month < 1 || month > 12) {
+            throw new ExcerciseException(ExerciseErrorCode.EX_PARAM_ERROR);
+        }
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        // 1. 해당 월의 시작일과 종료일 계산
+        LocalDate startLocalDate = LocalDate.of(year, month, 1);
+        LocalDate endLocalDate = startLocalDate.withDayOfMonth(startLocalDate.lengthOfMonth());
+        LocalDateTime startOfMonth = startLocalDate.atStartOfDay();
+        LocalDateTime endOfMonth = endLocalDate.atTime(LocalTime.MAX);
+
+        // 2. 이용 통계 집계
+        int totalWatchCount = videoLogRepository.countTotalWatchesByMonth(memberId, startOfMonth, endOfMonth);
+        int watchedVideoCount = videoLogRepository.countWatchedVideosByMonth(memberId, startOfMonth, endOfMonth);
+        int savedVideoCount = videoBookmarkRepository.findAllByMember(member).size();
+
+        ExerciseResponseDTO.UsageSummaryDto usageSummary = ExerciseResponseDTO.UsageSummaryDto.builder()
+                .totalWatchCount(totalWatchCount)
+                .watchedVideoCount(watchedVideoCount)
+                .savedVideoCount(savedVideoCount)
+                .build();
+
+        // 3. 당월 최다 시청 영상 조회
+        List<Object[]> mostWatchedResults = videoLogRepository.findMostWatchedVideoIdByMonth(memberId, startOfMonth, endOfMonth);
+
+        ExerciseResponseDTO.MostWatchedVideoDto mostWatchedVideoDto = null;
+        List<ExerciseVideo> similarVideos;
+        List<ExerciseVideo> newVideos;
+
+        if (!mostWatchedResults.isEmpty()) {
+            Object[] topResult = mostWatchedResults.get(0);
+            Long mostWatchedVideoId = (Long) topResult[0];
+            int mostWatchedCount = ((Number) topResult[1]).intValue();
+
+            ExerciseVideo topVideo = exerciseVideoRepository.findById(mostWatchedVideoId).orElse(null);
+
+            if (topVideo != null) {
+                boolean isTopBookmarked = videoBookmarkRepository.existsByMemberAndExerciseVideo(member, topVideo);
+                mostWatchedVideoDto = ExerciseResponseDTO.MostWatchedVideoDto.builder()
+                        .videoId(topVideo.getVideoId())
+                        .title(topVideo.getTitle())
+                        .youtubeVideoKey(topVideo.getYoutubeVideoKey())
+                        .thumbnailUrl(topVideo.getThumbnailUrl())
+                        .category(topVideo.getPostureType() != null ? topVideo.getPostureType().name() : "기타")
+                        .watchCount(mostWatchedCount)
+                        .isBookmarked(isTopBookmarked)
+                        .build();
+
+                // 비슷한 영상
+                similarVideos = exerciseVideoRepository.findRandomSimilarVideos(
+                        topVideo.getPostureType().name(),
+                        topVideo.getExerciseCategory().name(),
+                        topVideo.getVideoId(),
+                        2
+                );
+
+                // 새로운 운동 영상
+                newVideos = exerciseVideoRepository.findRandomNewVideos(
+                        topVideo.getExerciseCategory().name(),
+                        2
+                );
+            } else {
+                similarVideos = exerciseVideoRepository.findRandomVideos(2);
+                newVideos = exerciseVideoRepository.findRandomVideos(2);
+            }
+        } else {
+            // 시청 기록이 없을 때: 전체 영상 중 랜덤 2개씩 추출
+            similarVideos = exerciseVideoRepository.findRandomVideos(2);
+            newVideos = exerciseVideoRepository.findRandomVideos(2);
+        }
+
+        // 4. 북마크 여부 매핑
+        List<ExerciseResponseDTO.RecommendedVideoDto> similarVideoDtos = similarVideos.stream()
+                .map(v -> ExerciseResponseDTO.RecommendedVideoDto.of(v, videoBookmarkRepository.existsByMemberAndExerciseVideo(member, v)))
+                .toList();
+
+        List<ExerciseResponseDTO.RecommendedVideoDto> newVideoDtos = newVideos.stream()
+                .map(v -> ExerciseResponseDTO.RecommendedVideoDto.of(v, videoBookmarkRepository.existsByMemberAndExerciseVideo(member, v)))
+                .toList();
+
+        ExerciseResponseDTO.RecommendationDto recommendations = ExerciseResponseDTO.RecommendationDto.builder()
+                .similarVideos(similarVideoDtos)
+                .newVideos(newVideoDtos)
+                .build();
+
+        return ExerciseResponseDTO.MonthlyStatsResponseDto.builder()
+                .usageSummary(usageSummary)
+                .mostWatchedVideo(mostWatchedVideoDto)
+                .recommendations(recommendations)
+                .build();
     }
 }

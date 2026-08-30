@@ -192,4 +192,87 @@ public class ExcerciseController {
 
         return ApiResponse.onSuccess(ExerciseSuccessCode.VIDEO_WATCH_LOG_SUCCESS, result);
     }
+
+    @Operation(
+            summary = "운동 가이드 월별 이용 통계 및 맞춤 영상 조회 API by 김승연(개발 완료)",
+            description = "특정 연도와 월의 운동 가이드 이용 통계, 최다 시청 영상, 맞춤 추천 영상을 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "EX_STATS_200",
+                    description = "운동 가이드 월별 이용 통계 및 추천 영상 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"isSuccess\": true,\n" +
+                                            "  \"code\": \"EX_STATS_200\",\n" +
+                                            "  \"message\": \"운동 가이드 월별 이용 통계 및 추천 영상 조회가 완료되었습니다.\",\n" +
+                                            "  \"result\": {\n" +
+                                            "    \"usage_summary\": {\n" +
+                                            "      \"total_watch_count\": 18,\n" +
+                                            "      \"watched_video_count\": 7,\n" +
+                                            "      \"saved_video_count\": 4\n" +
+                                            "    },\n" +
+                                            "    \"most_watched_video\": {\n" +
+                                            "      \"video_id\": 101,\n" +
+                                            "      \"title\": \"목, 어깨 통증이 사라지는 10분 스트레칭! ...\",\n" +
+                                            "      \"youtube_video_key\": \"vX2c7XbZ\",\n" +
+                                            "      \"thumbnail_url\": \"https://img.youtube.com/vi/vX2c7XbZ/hqdefault.jpg\",\n" +
+                                            "      \"category\": \"목/어깨\",\n" +
+                                            "      \"watch_count\": 5,\n" +
+                                            "      \"is_bookmarked\": true\n" +
+                                            "    },\n" +
+                                            "    \"recommendations\": {\n" +
+                                            "      \"similar_videos\": [\n" +
+                                            "        {\n" +
+                                            "          \"video_id\": 102,\n" +
+                                            "          \"title\": \"목, 어깨 통증이 사라지는 10분 스트레칭\",\n" +
+                                            "          \"youtube_video_key\": \"aB3c4DeF\",\n" +
+                                            "          \"thumbnail_url\": \"https://img.youtube.com/vi/aB3c4DeF/hqdefault.jpg\",\n" +
+                                            "          \"category\": \"목/어깨\",\n" +
+                                            "          \"duration_minutes\": 10,\n" +
+                                            "          \"is_bookmarked\": false\n" +
+                                            "        }\n" +
+                                            "      ],\n" +
+                                            "      \"new_videos\": [\n" +
+                                            "        {\n" +
+                                            "          \"video_id\": 104,\n" +
+                                            "          \"title\": \"목, 어깨 통증이 사라지는 10분 스트레칭\",\n" +
+                                            "          \"youtube_video_key\": \"mN7o8PqR\",\n" +
+                                            "          \"thumbnail_url\": \"https://img.youtube.com/vi/mN7o8PqR/hqdefault.jpg\",\n" +
+                                            "          \"category\": \"목/어깨\",\n" +
+                                            "          \"duration_minutes\": 10,\n" +
+                                            "          \"is_bookmarked\": false\n" +
+                                            "        }\n" +
+                                            "      ]\n" +
+                                            "    }\n" +
+                                            "  }\n" +
+                                            "}"
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 연도 또는 월 파라미터 값",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "COMMON401",
+                    description = "인증 실패 (JWT 토큰 누락 또는 만료)",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @GetMapping("/history/monthly")
+    public ApiResponse<ExerciseResponseDTO.MonthlyStatsResponseDto> getMonthlyExerciseStats(
+            @RequestParam int year,
+            @RequestParam int month,
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+
+        Long memberId = principalDetails.getMember().getMemberId();
+        ExerciseResponseDTO.MonthlyStatsResponseDto result = exerciseService.getMonthlyExerciseStats(memberId, year, month);
+
+        return ApiResponse.onSuccess(ExerciseSuccessCode.EXERCISE_STATS_SUCCESS, result);
+    }
 }

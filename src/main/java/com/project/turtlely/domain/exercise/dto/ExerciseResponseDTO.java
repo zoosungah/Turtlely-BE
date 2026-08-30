@@ -135,4 +135,109 @@ public class ExerciseResponseDTO {
                     .build();
         }
     }
+
+    // 월별 이용 통계 및 맞춤 영상 조회 응답 DTO
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MonthlyStatsResponseDto {
+        @JsonProperty("usage_summary")
+        private UsageSummaryDto usageSummary;
+
+        @JsonProperty("most_watched_video")
+        private MostWatchedVideoDto mostWatchedVideo;
+
+        private RecommendationDto recommendations;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UsageSummaryDto {
+        @JsonProperty("total_watch_count")
+        private Integer totalWatchCount;
+
+        @JsonProperty("watched_video_count")
+        private Integer watchedVideoCount;
+
+        @JsonProperty("saved_video_count")
+        private Integer savedVideoCount;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MostWatchedVideoDto {
+        @JsonProperty("video_id")
+        private Long videoId;
+
+        private String title;
+
+        @JsonProperty("youtube_video_key")
+        private String youtubeVideoKey;
+
+        @JsonProperty("thumbnail_url")
+        private String thumbnailUrl;
+
+        private String category;
+
+        @JsonProperty("watch_count")
+        private Integer watchCount;
+
+        @JsonProperty("is_bookmarked")
+        private Boolean isBookmarked;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RecommendationDto {
+        @JsonProperty("similar_videos")
+        private List<RecommendedVideoDto> similarVideos;
+
+        @JsonProperty("new_videos")
+        private List<RecommendedVideoDto> newVideos;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RecommendedVideoDto {
+        @JsonProperty("video_id")
+        private Long videoId;
+
+        private String title;
+
+        @JsonProperty("youtube_video_key")
+        private String youtubeVideoKey;
+
+        @JsonProperty("thumbnail_url")
+        private String thumbnailUrl;
+
+        private String category;
+
+        @JsonProperty("duration_minutes")
+        private Integer durationMinutes;
+
+        @JsonProperty("is_bookmarked")
+        private Boolean isBookmarked;
+
+        public static RecommendedVideoDto of(ExerciseVideo video, boolean isBookmarked) {
+            return RecommendedVideoDto.builder()
+                    .videoId(video.getVideoId())
+                    .title(video.getTitle())
+                    .youtubeVideoKey(video.getYoutubeVideoKey())
+                    .thumbnailUrl(video.getThumbnailUrl())
+                    .category(video.getPostureType() != null ? video.getPostureType().name() : "기타")
+                    .durationMinutes(video.getDurationMinutes())
+                    .isBookmarked(isBookmarked)
+                    .build();
+        }
+    }
 }
