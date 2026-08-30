@@ -2,7 +2,7 @@ package com.project.turtlely.domain.measurement.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.turtlely.domain.measurement.dto.GptAnalysisResponse;
-import com.project.turtlely.domain.measurement.exception.MeasurementErrorCode;
+import com.project.turtlely.domain.measurement.exception.code.MeasurementErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
