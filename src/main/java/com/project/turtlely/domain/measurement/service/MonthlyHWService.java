@@ -1,6 +1,6 @@
 package com.project.turtlely.domain.measurement.service;
 
-import com.project.turtlely.domain.measurement.exception.MeasurementErrorCode;
+import com.project.turtlely.domain.measurement.exception.code.MeasurementErrorCode;
 import org.springframework.stereotype.Service;
 
 @Service

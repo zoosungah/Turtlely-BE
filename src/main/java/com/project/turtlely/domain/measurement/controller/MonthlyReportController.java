@@ -1,11 +1,11 @@
 package com.project.turtlely.domain.measurement.controller;
 
-import com.project.turtlely.domain.measurement.dto.AlarmRequest;
-import com.project.turtlely.domain.measurement.dto.AlarmResponse;
-import com.project.turtlely.domain.measurement.dto.MonthlyReportResponse;
-import com.project.turtlely.domain.measurement.dto.ReportAnalyzeRequest;
+import com.project.turtlely.domain.measurement.dto.*;
+import com.project.turtlely.domain.measurement.service.MonthlyDailySummaryService;
 import com.project.turtlely.domain.measurement.service.MonthlyReportService;
-import com.project.turtlely.domain.measurement.exception.MeasurementSuccessCode;
+import com.project.turtlely.domain.measurement.exception.code.MeasurementSuccessCode;
+import com.project.turtlely.domain.member.entity.Member;
+import com.project.turtlely.domain.member.repository.MemberRepository;
 import com.project.turtlely.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Tag(name = "월간측정/월간리포트")
@@ -31,6 +32,8 @@ import java.util.List;
 public class MonthlyReportController {
 
     private final MonthlyReportService monthlyReportService;
+    private final MonthlyDailySummaryService monthlyDailySummaryService;
+    private final MemberRepository memberRepository;
 
     @Operation(summary = "유저별 월간 리포트 목록 조회 API by 김승연(개발완료)", description = "유저가 가진 월간 리포트 목록을 최신순으로 조회하며, 동일 월은 최신 데이터만 반환합니다.")
     @ApiResponses(value = {
@@ -154,6 +157,48 @@ public class MonthlyReportController {
         }
 
         return ResponseEntity.ok(ApiResponse.onSuccess(MeasurementSuccessCode.REPORT_DETAIL, response));
+    }
+
+    @Operation(summary = "주차별 일일 자세 상태 by 주성아(개발 완료)", description = """
+                    **월간 리포트 하단의 통계 분석 데이터를 제공하는 API입니다.**
+                    
+                    * **주차별 통계 (`weeklyStats`)**:
+                      * 해당 월의 1주차(1~7일), 2주차(8~14일), 3주차(15~21일), 4주차(22일~말일)의 누적 측정 시간을 100%로 환산한 자세 비율임.
+                      * `normalRatio` (정상 비율 %), `cautionRatio` (주의 비율 %), `warningRatio` (경고 비율 %)
+                      * `averageCva`: 해당 주차의 평균 CVA 각도 (소수점 첫째 자리)
+                      * `hasData`: 해당 주차에 일일 측정 기록이 존재하는지 여부 (false일 경우 비율 0)
+                      
+                    * **지난달 대비 비교 (`monthlyComparison`)**:
+                      * 이번 달 전체 평균 비율과 지난달 전체 평균 비율의 차이값(%p)임
+                      * 양수(+)는 증가, 음수(-)는 감소를 의미함.
+                      * `cvaDiff`: 지난달 대비 평균 CVA 각도 증감치 (°)
+                      
+                    * **쿼리 파라미터 미입력 시 기본값**:
+                      * `year`, `month`를 전달하지 않으면 현재 날짜 기준 연/월로 자동 집계되도록 함.
+                    """)
+    @GetMapping("/daily-summary")
+    public ResponseEntity<ApiResponse<MonthlyDailySummaryResponseDTO.SummaryDTO>> getMonthlyDailySummary(
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(name = "year", required = false) Integer year,
+            @RequestParam(name = "month", required = false) Integer month
+    ) {
+        LocalDate now = LocalDate.now();
+        int targetYear = (year != null) ? year : now.getYear();
+        int targetMonth = (month != null) ? month : now.getMonthValue();
+
+        // 인증된 사용자 이메일/ID로 Member 조회
+        Member member = null;
+        if (userDetails != null) {
+            member = memberRepository.findByLoginId(userDetails.getUsername()).orElse(null);
+        }
+        if (member == null) {
+            member = memberRepository.findById(1L).orElse(null);
+        }
+
+        MonthlyDailySummaryResponseDTO.SummaryDTO result =
+                monthlyDailySummaryService.getMonthlyDailySummary(member, targetYear, targetMonth);
+
+        return ResponseEntity.ok(ApiResponse.onSuccess(MeasurementSuccessCode.MONTHLY_SUMMARY_GET, result));
     }
 
     @Operation(summary = "월간 측정용 프레임 좌표 분석 API by 김승연(개발완료)", description = "수집된 프레임 좌표 배열을 분석하여 거북목 상태 결과를 생성 및 저장합니다.")
