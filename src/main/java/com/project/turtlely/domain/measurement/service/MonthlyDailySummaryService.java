@@ -65,8 +65,15 @@ public class MonthlyDailySummaryService {
     }
 
     private WeeklyStatDTO calculateWeeklyStat(int week, List<DailyReport> reports) {
-        int totalDuration = reports.stream().mapToInt(DailyReport::getTotalMeasurementDuration).sum();
-        if (totalDuration == 0) {
+        int normalSec = reports.stream().mapToInt(DailyReport::getNormalDuration).sum();
+        int cautionSec = reports.stream().mapToInt(DailyReport::getCautionDuration).sum();
+        int warningSec = reports.stream().mapToInt(DailyReport::getWarningDuration).sum();
+        double cvaSum = reports.stream().mapToDouble(DailyReport::getCvaSum).sum();
+
+        // 3가지 상태 시간의 실제 합을 기준 분모(validTotalDuration)로 사용
+        int validTotalDuration = normalSec + cautionSec + warningSec;
+
+        if (validTotalDuration == 0) {
             return WeeklyStatDTO.builder()
                     .week(week)
                     .weekLabel(week + "주차")
@@ -78,18 +85,25 @@ public class MonthlyDailySummaryService {
                     .build();
         }
 
-        int normalSec = reports.stream().mapToInt(DailyReport::getNormalDuration).sum();
-        int cautionSec = reports.stream().mapToInt(DailyReport::getCautionDuration).sum();
-        int warningSec = reports.stream().mapToInt(DailyReport::getWarningDuration).sum();
-        double cvaSum = reports.stream().mapToDouble(DailyReport::getCvaSum).sum();
+        // 100% 기준 백분율 계산
+        int normalRatio = (int) Math.round(((double) normalSec / validTotalDuration) * 100);
+        int cautionRatio = (int) Math.round(((double) cautionSec / validTotalDuration) * 100);
+
+        // 반올림 오차로 100%가 넘거나 모자라는 것을 방지하기 위해 경고 비율은 잔여값으로 보정
+        int warningRatio = Math.max(0, 100 - normalRatio - cautionRatio);
+
+        // CVA 가중 평균
+        double avgCva = cvaSum > 0
+                ? Math.round((cvaSum / validTotalDuration) * 10.0) / 10.0
+                : 0.0;
 
         return WeeklyStatDTO.builder()
                 .week(week)
                 .weekLabel(week + "주차")
-                .averageCva(Math.round((cvaSum / totalDuration) * 10.0) / 10.0)
-                .normalRatio((int) Math.round(((double) normalSec / totalDuration) * 100))
-                .cautionRatio((int) Math.round(((double) cautionSec / totalDuration) * 100))
-                .warningRatio((int) Math.round(((double) warningSec / totalDuration) * 100))
+                .averageCva(avgCva)
+                .normalRatio(normalRatio)
+                .cautionRatio(cautionRatio)
+                .warningRatio(warningRatio)
                 .hasData(true)
                 .build();
     }
