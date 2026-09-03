@@ -160,7 +160,7 @@ public class ExerciseService {
         // 2. 이용 통계 집계
         int totalWatchCount = videoLogRepository.countTotalWatchesByMonth(memberId, startOfMonth, endOfMonth);
         int watchedVideoCount = videoLogRepository.countWatchedVideosByMonth(memberId, startOfMonth, endOfMonth);
-        int savedVideoCount = videoBookmarkRepository.findAllByMember(member).size();
+        int savedVideoCount = videoBookmarkRepository.countByMemberAndMonth(member, startOfMonth, endOfMonth);
 
         ExerciseResponseDTO.UsageSummaryDto usageSummary = ExerciseResponseDTO.UsageSummaryDto.builder()
                 .totalWatchCount(totalWatchCount)
