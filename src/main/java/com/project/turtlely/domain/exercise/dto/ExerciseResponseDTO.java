@@ -240,4 +240,74 @@ public class ExerciseResponseDTO {
                     .build();
         }
     }
+
+    // 월별 시청한 영상 상세 목록 조회 DTO
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MonthlyWatchedDetailDto {
+        private Integer year;
+        private Integer month;
+
+        @JsonProperty("total_watched_count")
+        private Integer totalWatchedCount;
+
+        @JsonProperty("history_list")
+        private List<WatchedDateGroupDto> historyList;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class WatchedDateGroupDto {
+        @JsonProperty("watched_date")
+        private String watchedDate;
+
+        private List<WatchedVideoDetailDto> videos;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class WatchedVideoDetailDto {
+        @JsonProperty("history_id")
+        private Long historyId;
+
+        @JsonProperty("video_id")
+        private Long videoId;
+
+        private String title;
+
+        @JsonProperty("youtube_video_key")
+        private String youtubeVideoKey;
+
+        @JsonProperty("thumbnail_url")
+        private String thumbnailUrl;
+
+        @JsonProperty("duration_minutes")
+        private Integer durationMinutes;
+
+        @JsonProperty("watched_at")
+        private LocalDateTime watchedAt;
+
+        @JsonProperty("is_bookmarked")
+        private Boolean isBookmarked;
+
+        public static WatchedVideoDetailDto of(VideoLog log, ExerciseVideo video, boolean isBookmarked) {
+            return WatchedVideoDetailDto.builder()
+                    .historyId(log.getVideoLogId())
+                    .videoId(video.getVideoId())
+                    .title(video.getTitle())
+                    .youtubeVideoKey(video.getYoutubeVideoKey())
+                    .thumbnailUrl(video.getThumbnailUrl())
+                    .durationMinutes(video.getDurationMinutes())
+                    .watchedAt(log.getWatchedAt())
+                    .isBookmarked(isBookmarked)
+                    .build();
+        }
+    }
 }

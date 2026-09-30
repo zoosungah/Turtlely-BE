@@ -19,10 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -235,6 +233,50 @@ public class ExerciseService {
                 .usageSummary(usageSummary)
                 .mostWatchedVideo(mostWatchedVideoDto)
                 .recommendations(recommendations)
+                .build();
+    }
+
+    // 월별 시청한 영상 상세 목록 조회
+    public ExerciseResponseDTO.MonthlyWatchedDetailDto getMonthlyWatchedDetail(Long memberId, int year, int month) {
+        if (year < 2000 || month < 1 || month > 12) {
+            throw new ExcerciseException(ExerciseErrorCode.EX_PARAM_ERROR);
+        }
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        LocalDate startLocalDate = LocalDate.of(year, month, 1);
+        LocalDate endLocalDate = startLocalDate.withDayOfMonth(startLocalDate.lengthOfMonth());
+        LocalDateTime startOfMonth = startLocalDate.atStartOfDay();
+        LocalDateTime endOfMonth = endLocalDate.atTime(LocalTime.MAX);
+
+        List<VideoLog> videoLogs = videoLogRepository.findAllByMemberIdAndMonth(memberId, startOfMonth, endOfMonth);
+
+        Map<String, List<ExerciseResponseDTO.WatchedVideoDetailDto>> groupedByDate = videoLogs.stream()
+                .collect(Collectors.groupingBy(
+                        log -> log.getWatchedAt().toLocalDate().toString(),
+                        LinkedHashMap::new, // 순서 보장 (최신 날짜순)
+                        Collectors.mapping(log -> {
+                            ExerciseVideo video = exerciseVideoRepository.findById(log.getVideoId()).orElse(null);
+                            if (video == null) return null;
+
+                            boolean isBookmarked = videoBookmarkRepository.existsByMemberAndExerciseVideo(member, video);
+                            return ExerciseResponseDTO.WatchedVideoDetailDto.of(log, video, isBookmarked);
+                        }, Collectors.filtering(Objects::nonNull, Collectors.toList()))
+                ));
+
+        List<ExerciseResponseDTO.WatchedDateGroupDto> historyList = groupedByDate.entrySet().stream()
+                .map(entry -> ExerciseResponseDTO.WatchedDateGroupDto.builder()
+                        .watchedDate(entry.getKey())
+                        .videos(entry.getValue())
+                        .build())
+                .toList();
+
+        return ExerciseResponseDTO.MonthlyWatchedDetailDto.builder()
+                .year(year)
+                .month(month)
+                .totalWatchedCount(videoLogs.size())
+                .historyList(historyList)
                 .build();
     }
 }

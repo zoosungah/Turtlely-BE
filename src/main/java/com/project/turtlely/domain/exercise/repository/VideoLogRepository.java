@@ -28,4 +28,8 @@ public interface VideoLogRepository extends JpaRepository<VideoLog, Long> {
             "GROUP BY v.videoId " +
             "ORDER BY COUNT(v) DESC")
     List<Object[]> findMostWatchedVideoIdByMonth(@Param("memberId") Long memberId, @Param("startOfMonth") LocalDateTime startOfMonth, @Param("endOfMonth") LocalDateTime endOfMonth);
+
+    // 4. 특정 기간 동안 시청한 영상 목록 조회
+    @Query("SELECT v FROM VideoLog v WHERE v.memberId = :memberId AND v.watchedAt >= :startOfMonth AND v.watchedAt <= :endOfMonth ORDER BY v.watchedAt DESC")
+    List<VideoLog> findAllByMemberIdAndMonth(@Param("memberId") Long memberId, @Param("startOfMonth") LocalDateTime startOfMonth, @Param("endOfMonth") LocalDateTime endOfMonth);
 }

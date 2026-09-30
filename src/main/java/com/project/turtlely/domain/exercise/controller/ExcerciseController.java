@@ -275,4 +275,69 @@ public class ExcerciseController {
 
         return ApiResponse.onSuccess(ExerciseSuccessCode.EXERCISE_STATS_SUCCESS, result);
     }
+
+    @Operation(
+            summary = "월별 시청한 영상 상세 목록 조회 API by 김승연(개발 완료)",
+            description = "특정 연도와 월에 사용자가 시청한 영상 목록을 날짜별로 그룹화하여 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "EX_HISTORY_DETAIL_200",
+                    description = "월별 시청한 영상 상세 목록 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"isSuccess\": true,\n" +
+                                            "  \"code\": \"EX_HISTORY_DETAIL_200\",\n" +
+                                            "  \"message\": \"월별 시청한 영상 상세 목록 조회가 완료되었습니다.\",\n" +
+                                            "  \"result\": {\n" +
+                                            "    \"year\": 2026,\n" +
+                                            "    \"month\": 8,\n" +
+                                            "    \"total_watched_count\": 3,\n" +
+                                            "    \"history_list\": [\n" +
+                                            "      {\n" +
+                                            "        \"watched_date\": \"2026-08-28\",\n" +
+                                            "        \"videos\": [\n" +
+                                            "          {\n" +
+                                            "            \"history_id\": 12,\n" +
+                                            "            \"video_id\": 101,\n" +
+                                            "            \"title\": \"목, 어깨 통증이 사라지는 10분 스트레칭!\",\n" +
+                                            "            \"youtube_video_key\": \"vX2c7XbZ\",\n" +
+                                            "            \"thumbnail_url\": \"https://img.youtube.com/vi/vX2c7XbZ/hqdefault.jpg\",\n" +
+                                            "            \"duration_minutes\": 10,\n" +
+                                            "            \"watched_at\": \"2026-08-28T21:45:00\",\n" +
+                                            "            \"is_bookmarked\": true\n" +
+                                            "          }\n" +
+                                            "        ]\n" +
+                                            "      }\n" +
+                                            "    ]\n" +
+                                            "  }\n" +
+                                            "}"
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 연도 또는 월 파라미터 값",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "COMMON401",
+                    description = "인증 실패 (JWT 토큰 누락 또는 만료)",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @GetMapping("/history/monthly/detail")
+    public ApiResponse<ExerciseResponseDTO.MonthlyWatchedDetailDto> getMonthlyWatchedDetail(
+            @RequestParam int year,
+            @RequestParam int month,
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+
+        Long memberId = principalDetails.getMember().getMemberId();
+        ExerciseResponseDTO.MonthlyWatchedDetailDto result = exerciseService.getMonthlyWatchedDetail(memberId, year, month);
+
+        return ApiResponse.onSuccess(ExerciseSuccessCode.EXERCISE_STATS_SUCCESS, result);
+    }
 }
