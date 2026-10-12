@@ -142,9 +142,10 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
         for (int i = 0; i < request.getFrames().size(); i++) {
             FrameData current = request.getFrames().get(i);
 
-            if (current.getEyeX() <= 0 || current.getEyeX() > 1.0 || current.getEyeY() <= 0 || current.getEyeY() > 1.0 ||
-                    current.getTragusX() <= 0 || current.getTragusX() > 1.0 || current.getTragusY() <= 0 || current.getTragusY() > 1.0 ||
-                    current.getC7X() <= 0 || current.getC7X() > 1.0 || current.getC7Y() <= 0 || current.getC7Y() > 1.0) {
+            // 수정 범위 조건 (0 미만 또는 1.0 초과인 경우에만 제외)
+            if (current.getEyeX() < 0.0 || current.getEyeX() > 1.0 || current.getEyeY() < 0.0 || current.getEyeY() > 1.0 ||
+                    current.getTragusX() < 0.0 || current.getTragusX() > 1.0 || current.getTragusY() < 0.0 || current.getTragusY() > 1.0 ||
+                    current.getC7X() < 0.0 || current.getC7X() > 1.0 || current.getC7Y() < 0.0 || current.getC7Y() > 1.0) {
                 continue;
             }
 
@@ -339,27 +340,23 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
                                 .reportMonth(m.getMeasuredAt().getMonthValue())
                                 .measuredAt(m.getMeasuredAt())
                                 .build(),
-                        (existing, replacement) -> existing, // Desc 정렬 리스트이므로 처음 적재된 기존(최신)본 유지
+                        (existing, replacement) -> existing,
                         java.util.LinkedHashMap::new
                 ))
                 .values()
                 .stream()
                 .collect(Collectors.toList());
     }
-    // 30일 경과한 회원 선별-> 알림생성, 저장
+
     @Override
     @Transactional
     public void createMonthlyMeasurementAlerts() {
-        // 오늘 날짜 기준 30일 전 계산
         LocalDateTime targetDate = LocalDateTime.now().minusDays(30);
-
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
 
-        // 마지막 측정일 기준 30일이 경과한 타겟 회원 추출
         List<Member> targetMembers = measurementRepository.findMembersToNotify(targetDate);
 
         for (Member targetMember : targetMembers) {
-            // memberRepository를 통해 FCM 토큰을 포함한 최신 Member 엔티티를 영속화하여 재조회
             Member member = memberRepository.findById(targetMember.getMemberId())
                     .orElse(targetMember);
 
@@ -384,10 +381,6 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
 
             notificationRepository.save(notification);
 
-            // FCM 전송 호출 바로 직전에 로그 추가
-            log.info("★ 월간 알림 FCM 발송 시도 - Member ID: {}, Token: {}", member.getMemberId(), member.getFcmToken());
-
-            // FCM 실제 푸시 알림 전송 호출
             if (member.getFcmToken() != null && !member.getFcmToken().isBlank()) {
                 fcmService.sendNotification(
                         member.getFcmToken(),
