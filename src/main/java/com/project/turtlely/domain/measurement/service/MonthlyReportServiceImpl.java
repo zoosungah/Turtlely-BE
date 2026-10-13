@@ -128,140 +128,174 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
     @Override
     @Transactional
     public MonthlyReportResponse analyzeAndSaveReport(ReportAnalyzeRequest request, String loginId) {
-        if (request.getFrames() == null || request.getFrames().isEmpty()) {
-            throw new MeasurementCustomException(MeasurementErrorCode.INVALID_FRAME_DATA);
-        }
+        System.out.println("=== 🚀 analyzeAndSaveReport 서비스 로직 진입 ===");
 
-        Member latestMember = memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
-
-        FrameData bestFrame = null;
-        double minScore = Double.MAX_VALUE;
-        FrameData prevFrame = null;
-
-        for (int i = 0; i < request.getFrames().size(); i++) {
-            FrameData current = request.getFrames().get(i);
-
-            // 수정 범위 조건 (0 미만 또는 1.0 초과인 경우에만 제외)
-            if (current.getEyeX() < 0.0 || current.getEyeX() > 1.0 || current.getEyeY() < 0.0 || current.getEyeY() > 1.0 ||
-                    current.getTragusX() < 0.0 || current.getTragusX() > 1.0 || current.getTragusY() < 0.0 || current.getTragusY() > 1.0 ||
-                    current.getC7X() < 0.0 || current.getC7X() > 1.0 || current.getC7Y() < 0.0 || current.getC7Y() > 1.0) {
-                continue;
+        try {
+            if (request == null || request.getFrames() == null || request.getFrames().isEmpty()) {
+                System.out.println("❌ [에러] request 또는 frames가 비어있거나 누락됨!");
+                throw new MeasurementCustomException(MeasurementErrorCode.INVALID_FRAME_DATA);
             }
 
-            double movement = 0.0;
-            if (i > 0 && prevFrame != null) {
-                movement = Math.sqrt(
-                        Math.pow(current.getTragusX() - prevFrame.getTragusX(), 2) +
-                                Math.pow(current.getTragusY() - prevFrame.getTragusY(), 2) +
-                                Math.pow(current.getC7X() - prevFrame.getC7X(), 2) +
-                                Math.pow(current.getC7Y() - prevFrame.getC7Y(), 2)
+            Member latestMember = memberRepository.findByLoginId(loginId)
+                    .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
+
+            System.out.println("✅ [회원 조회 성공] loginId: " + latestMember.getLoginId() + ", 총 프레임 개수: " + request.getFrames().size());
+
+            FrameData bestFrame = null;
+            double minScore = Double.MAX_VALUE;
+            FrameData prevFrame = null;
+
+            for (int i = 0; i < request.getFrames().size(); i++) {
+                FrameData current = request.getFrames().get(i);
+
+                if (current.getEyeX() < 0.0 || current.getEyeX() > 1.0 || current.getEyeY() < 0.0 || current.getEyeY() > 1.0 ||
+                        current.getTragusX() < 0.0 || current.getTragusX() > 1.0 || current.getTragusY() < 0.0 || current.getTragusY() > 1.0 ||
+                        current.getC7X() < 0.0 || current.getC7X() > 1.0 || current.getC7Y() < 0.0 || current.getC7Y() > 1.0) {
+                    System.out.println("⚠️ [유효성 검사 탈락] 프레임 index: " + i);
+                    continue;
+                }
+
+                double movement = 0.0;
+                if (i > 0 && prevFrame != null) {
+                    movement = Math.sqrt(
+                            Math.pow(current.getTragusX() - prevFrame.getTragusX(), 2) +
+                                    Math.pow(current.getTragusY() - prevFrame.getTragusY(), 2) +
+                                    Math.pow(current.getC7X() - prevFrame.getC7X(), 2) +
+                                    Math.pow(current.getC7Y() - prevFrame.getC7Y(), 2)
+                    );
+                }
+
+                double centerDistance = Math.sqrt(
+                        Math.pow(current.getTragusX() - 0.5, 2) +
+                                Math.pow(current.getTragusY() - 0.5, 2)
                 );
+
+                double calculatedScore = (movement * 0.7) + (centerDistance * 0.3);
+
+                if (calculatedScore < minScore) {
+                    minScore = calculatedScore;
+                    bestFrame = current;
+                }
+                prevFrame = current;
             }
 
-            double centerDistance = Math.sqrt(
-                    Math.pow(current.getTragusX() - 0.5, 2) +
-                            Math.pow(current.getTragusY() - 0.5, 2)
-            );
-
-            double calculatedScore = (movement * 0.7) + (centerDistance * 0.3);
-
-            if (calculatedScore < minScore) {
-                minScore = calculatedScore;
-                bestFrame = current;
+            if (bestFrame == null) {
+                System.out.println("❌ [에러] 모든 프레임이 유효성 검사를 통과하지 못해 bestFrame이 null입니다!");
+                throw new MeasurementCustomException(MeasurementErrorCode.LANDMARK_NOT_FOUND);
             }
-            prevFrame = current;
-        }
 
-        if (bestFrame == null) {
-            throw new MeasurementCustomException(MeasurementErrorCode.LANDMARK_NOT_FOUND);
-        }
+            System.out.println("✨ [베스트 프레임 선정 완료] 점수: " + minScore);
 
-        double deltaYCva = Math.abs(bestFrame.getC7Y() - bestFrame.getTragusY());
-        double deltaXCva = Math.abs(bestFrame.getC7X() - bestFrame.getTragusX());
-        double cvaAngle = Math.toDegrees(Math.atan2(deltaYCva, deltaXCva));
+            double deltaYCva = Math.abs(bestFrame.getC7Y() - bestFrame.getTragusY());
+            double deltaXCva = Math.abs(bestFrame.getC7X() - bestFrame.getTragusX());
+            double cvaAngle = Math.toDegrees(Math.atan2(deltaYCva, deltaXCva));
 
-        double[] v1 = { bestFrame.getEyeX() - bestFrame.getTragusX(), bestFrame.getEyeY() - bestFrame.getTragusY() };
-        double[] v2 = { bestFrame.getC7X() - bestFrame.getTragusX(), bestFrame.getC7Y() - bestFrame.getTragusY() };
+            double[] v1 = { bestFrame.getEyeX() - bestFrame.getTragusX(), bestFrame.getEyeY() - bestFrame.getTragusY() };
+            double[] v2 = { bestFrame.getC7X() - bestFrame.getTragusX(), bestFrame.getC7Y() - bestFrame.getTragusY() };
 
-        double dotProd = (v1[0] * v2[0]) + (v1[1] * v2[1]);
-        double mag1 = Math.sqrt(Math.pow(v1[0], 2) + Math.pow(v1[1], 2));
-        double mag2 = Math.sqrt(Math.pow(v2[0], 2) + Math.pow(v2[1], 2));
+            double dotProd = (v1[0] * v2[0]) + (v1[1] * v2[1]);
+            double mag1 = Math.sqrt(Math.pow(v1[0], 2) + Math.pow(v1[1], 2));
+            double mag2 = Math.sqrt(Math.pow(v2[0], 2) + Math.pow(v2[1], 2));
 
-        double craAngle = 0.0;
-        if (mag1 * mag2 != 0) {
-            double cosTheta = dotProd / (mag1 * mag2);
-            cosTheta = Math.max(-1.0, Math.min(1.0, cosTheta));
-            craAngle = Math.toDegrees(Math.acos(cosTheta));
-        }
+            double craAngle = 0.0;
+            if (mag1 * mag2 != 0) {
+                double cosTheta = dotProd / (mag1 * mag2);
+                cosTheta = Math.max(-1.0, Math.min(1.0, cosTheta));
+                craAngle = Math.toDegrees(Math.acos(cosTheta));
+            }
 
-        String postureType;
-        double craDeviation = Math.abs(craAngle - 145.0);
+            String postureType;
+            double craDeviation = Math.abs(craAngle - 145.0);
 
-        if (cvaAngle >= 48.7) {
-            if (craDeviation <= 10.0) {
-                postureType = "정상";
+            if (cvaAngle >= 48.7) {
+                if (craDeviation <= 10.0) {
+                    postureType = "정상";
+                } else {
+                    postureType = "주의";
+                }
+            } else if (cvaAngle < 43.8 || craDeviation > 20.0) {
+                postureType = "위험";
             } else {
                 postureType = "주의";
             }
-        } else if (cvaAngle < 43.8 || craDeviation > 20.0) {
-            postureType = "위험";
-        } else {
-            postureType = "주의";
+
+            float calibrationC = monthlyHWService.calculateCalibrationC(
+                    cvaAngle,
+                    bestFrame.getHwAccelX(),
+                    bestFrame.getHwAccelY(),
+                    bestFrame.getHwAccelZ()
+            );
+
+            LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
+            List<VideoLog> recentLogs = videoLogRepository.findRecentWatchLogs(latestMember.getMemberId(), threeMonthsAgo);
+            int totalWatchTimeMinutes = recentLogs.stream().mapToInt(VideoLog::getWatchTime).sum() / 60;
+
+            GptAnalysisResponse gptResult = gptService.requestPostureAnalysis(
+                    cvaAngle,
+                    craAngle,
+                    postureType,
+                    totalWatchTimeMinutes
+            );
+
+            String diseasesText = gptResult.getTop3Diseases().stream()
+                    .map(d -> d.getName() + ":" + String.format("%.2f", d.getScore()))
+                    .collect(Collectors.joining(","));
+
+            String predMonths = gptResult.getPredictionGraph().stream()
+                    .map(p -> p.getMonth())
+                    .collect(Collectors.joining(","));
+
+            String predScores = gptResult.getPredictionGraph().stream()
+                    .map(p -> String.valueOf((int) Math.round(p.getAngle())))
+                    .collect(Collectors.joining(","));
+
+            String finalPredictionData = predMonths + "|" + predScores;
+
+            MonthlyMeasurement measurement = MonthlyMeasurement.builder()
+                    .member(latestMember)
+                    .cvaAngle((float) cvaAngle)
+                    .craAngle((float) craAngle)
+                    .postureType(postureType)
+                    .score(gptResult.getCervicalHealthScore())
+                    .predictedDiseases(diseasesText)
+                    .predictionData(finalPredictionData)
+                    .measuredAt(LocalDateTime.now())
+                    .hwAccelX((float) bestFrame.getHwAccelX())
+                    .hwAccelY((float) bestFrame.getHwAccelY())
+                    .hwAccelZ((float) bestFrame.getHwAccelZ())
+                    .calibrationC(calibrationC)
+                    .build();
+
+            MonthlyMeasurement saved = measurementRepository.save(measurement);
+            measurementRepository.flush();
+
+            return MonthlyReportResponse.builder()
+                    .dataStatus("AVAILABLE")
+                    .monthlyId(saved.getMonthlyId())
+                    .nickname(latestMember.getNickname())
+                    .postureType(postureType)
+                    .score(gptResult.getCervicalHealthScore())
+                    .cvaAngle(cvaAngle)
+                    .craAngle(craAngle)
+                    .cvaHistory(new ArrayList<>())
+                    .craHistory(new ArrayList<>())
+                    .measurementAlarm(latestMember.isMeasurementAlarm())
+                    .reportAlarm(latestMember.isReportAlarm())
+                    .measuredAt(saved.getMeasuredAt())
+                    .predictedDiseases(saved.getPredictedDiseasesList())
+                    .predictionData(MonthlyReportResponse.PredictionDataDto.builder()
+                            .predictionMonths(saved.getPredictionMonthsList())
+                            .predictionScores(saved.getPredictionScoresList())
+                            .build())
+                    .reportYear(saved.getMeasuredAt().getYear())
+                    .reportMonth(saved.getMeasuredAt().getMonthValue())
+                    .build();
+
+        } catch (Exception e) {
+            System.err.println("💥 [CRITICAL ERROR in analyzeAndSaveReport] 💥");
+            e.printStackTrace();
+            throw e;
         }
-
-        float calibrationC = monthlyHWService.calculateCalibrationC(
-                cvaAngle,
-                bestFrame.getHwAccelX(),
-                bestFrame.getHwAccelY(),
-                bestFrame.getHwAccelZ()
-        );
-
-        LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
-        List<VideoLog> recentLogs = videoLogRepository.findRecentWatchLogs(latestMember.getMemberId(), threeMonthsAgo);
-        int totalWatchTimeMinutes = recentLogs.stream().mapToInt(VideoLog::getWatchTime).sum() / 60;
-
-        GptAnalysisResponse gptResult = gptService.requestPostureAnalysis(
-                cvaAngle,
-                craAngle,
-                postureType,
-                totalWatchTimeMinutes
-        );
-
-        String diseasesText = gptResult.getTop3Diseases().stream()
-                .map(d -> d.getName() + ":" + String.format("%.2f", d.getScore()))
-                .collect(Collectors.joining(","));
-
-        String predMonths = gptResult.getPredictionGraph().stream()
-                .map(p -> p.getMonth())
-                .collect(Collectors.joining(","));
-
-        String predScores = gptResult.getPredictionGraph().stream()
-                .map(p -> String.valueOf((int) Math.round(p.getAngle())))
-                .collect(Collectors.joining(","));
-
-        String finalPredictionData = predMonths + "|" + predScores;
-
-        MonthlyMeasurement measurement = MonthlyMeasurement.builder()
-                .member(latestMember)
-                .cvaAngle((float) cvaAngle)
-                .craAngle((float) craAngle)
-                .postureType(postureType)
-                .score(gptResult.getCervicalHealthScore())
-                .predictedDiseases(diseasesText)
-                .predictionData(finalPredictionData)
-                .measuredAt(LocalDateTime.now())
-
-                .hwAccelX((float) bestFrame.getHwAccelX())
-                .hwAccelY((float) bestFrame.getHwAccelY())
-                .hwAccelZ((float) bestFrame.getHwAccelZ())
-                .calibrationC(calibrationC)
-                .build();
-
-        MonthlyMeasurement saved = measurementRepository.save(measurement);
-        measurementRepository.flush();
-
-        return getMonthlyReport(saved.getMonthlyId(), latestMember.getLoginId());
     }
 
     @Override
