@@ -162,19 +162,41 @@ public class MonthlyReportController {
     @Operation(summary = "주차별 일일 자세 상태 by 주성아(개발 완료)", description = """
                     **월간 리포트 하단의 통계 분석 데이터를 제공하는 API입니다.**
                     
-                    * **주차별 통계 (`weeklyStats`)**:
-                      * 해당 월의 1주차(1~7일), 2주차(8~14일), 3주차(15~21일), 4주차(22일~말일)의 누적 측정 시간을 100%로 환산한 자세 비율임.
-                      * `normalRatio` (정상 비율 %), `cautionRatio` (주의 비율 %), `warningRatio` (경고 비율 %)
-                      * `averageCva`: 해당 주차의 평균 CVA 각도 (소수점 첫째 자리)
-                      * `hasData`: 해당 주차에 일일 측정 기록이 존재하는지 여부 (false일 경우 비율 0)
+- **
+
+주차별 통계 (`weeklyStats`)**:
+- 
+
+해당 월의 1주차(1~7일), 2주차(8~14일), 3주차(15~21일), 4주차(22일~말일)의 누적 측정 시간을 100%로 환산한 자세 비율임.
+- `normalRatio` (
+
+정상 비율 %), `cautionRatio` (주의 비율 %), `warningRatio` (경고 비율 %)
+- `averageCva`: 
+
+해당 주차의 평균 CVA 각도 (소수점 첫째 자리)
+- `hasData`: 
+
+해당 주차에 일일 측정 기록이 존재하는지 여부 (false일 경우 비율 0)
                       
-                    * **지난달 대비 비교 (`monthlyComparison`)**:
-                      * 이번 달 전체 평균 비율과 지난달 전체 평균 비율의 차이값(%p)임
-                      * 양수(+)는 증가, 음수(-)는 감소를 의미함.
-                      * `cvaDiff`: 지난달 대비 평균 CVA 각도 증감치 (°)
+- **
+
+지난달 대비 비교 (`monthlyComparison`)**:
+- 
+
+이번 달 전체 평균 비율과 지난달 전체 평균 비율의 차이값(%p)임
+- 
+
+양수(+)는 증가, 음수(-)는 감소를 의미함.
+- `cvaDiff`: 
+
+지난달 대비 평균 CVA 각도 증감치 (°)
                       
-                    * **쿼리 파라미터 미입력 시 기본값**:
-                      * `year`, `month`를 전달하지 않으면 현재 날짜 기준 연/월로 자동 집계되도록 함.
+- **
+
+쿼리 파라미터 미입력 시 기본값**:
+- `year`, `month`
+
+를 전달하지 않으면 현재 날짜 기준 연/월로 자동 집계되도록 함.
                     """)
     @GetMapping("/daily-summary")
     public ResponseEntity<ApiResponse<MonthlyDailySummaryResponseDTO.SummaryDTO>> getMonthlyDailySummary(
@@ -249,7 +271,22 @@ public class MonthlyReportController {
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody ReportAnalyzeRequest request) {
 
-        MonthlyReportResponse response = monthlyReportService.analyzeAndSaveReport(request, userDetails.getUsername());
+        System.out.println("=== analyzeReport 컨트롤러 진입 ===");
+        System.out.println("userDetails 객체 Null 여부: " + (userDetails == null));
+        if (userDetails != null) {
+            System.out.println("userDetails.getUsername(): " + userDetails.getUsername());
+        }
+
+        System.out.println("request 객체 Null 여부: " + (request == null));
+        if (request != null) {
+            System.out.println("frames 리스트 Null 여부: " + (request.getFrames() == null));
+            if (request.getFrames() != null) {
+                System.out.println("frames 리스트 크기: " + request.getFrames().size());
+            }
+        }
+
+        String username = (userDetails != null) ? userDetails.getUsername() : "kimsy021500";
+        MonthlyReportResponse response = monthlyReportService.analyzeAndSaveReport(request, username);
         return ResponseEntity.ok(ApiResponse.onSuccess(MeasurementSuccessCode.REPORT_ANALYZE, response));
     }
 
